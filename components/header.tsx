@@ -1,7 +1,6 @@
 'use client'
 
-import { BellIcon, SearchIcon, UserIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { Bell, Search, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -19,21 +18,21 @@ export function Header({ role }: HeaderProps) {
       
       <div className="flex items-center space-x-2 md:space-x-4">
         <div className="relative hidden md:block">
-          <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
             type="text"
             placeholder="Search..."
             className="pl-8 w-40 md:w-64"
           />
         </div>
-        
+
         <Button variant="ghost" size="icon" className="hidden md:block">
-          <HugeiconsIcon icon={BellIcon} />
+          <Bell className="h-4 w-4" />
         </Button>
-        
+
         <div className="flex items-center space-x-2">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <HugeiconsIcon icon={UserIcon} className="h-4 w-4 text-primary-foreground" />
+            <User className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="hidden md:inline capitalize">{role}</span>
         </div>

@@ -1,19 +1,18 @@
 'use client'
 
 import { 
-  UserIcon, 
-  CalendarIcon, 
-  FileTextIcon, 
-  SettingsIcon, 
-  LogOutIcon,
-  HomeIcon,
-  UsersIcon,
-  BriefcaseIcon,
-  ChartBarIcon,
-  ShieldCheckIcon,
-  MenuIcon
-} from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+  User, 
+  Calendar, 
+  FileText, 
+  Settings, 
+  LogOut, 
+  Home, 
+  Users, 
+  Briefcase, 
+  BarChart3, 
+  ShieldCheck, 
+  Menu 
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -27,27 +26,27 @@ interface SidebarProps {
 
 const navItems = {
   patient: [
-    { label: 'Dashboard', href: '/patient', icon: HomeIcon },
-    { label: 'Book Appointment', href: '/patient/book', icon: CalendarIcon },
-    { label: 'My Appointments', href: '/patient/appointments', icon: CalendarIcon },
-    { label: 'Health Records', href: '/patient/records', icon: FileTextIcon },
-    { label: 'Profile', href: '/patient/profile', icon: UserIcon },
+    { label: 'Dashboard', href: '/patient', icon: Home },
+    { label: 'Book Appointment', href: '/patient/book', icon: Calendar },
+    { label: 'My Appointments', href: '/patient/appointments', icon: Calendar },
+    { label: 'Health Records', href: '/patient/records', icon: FileText },
+    { label: 'Profile', href: '/patient/profile', icon: User },
   ],
   dietitian: [
-    { label: 'Dashboard', href: '/dietitian', icon: HomeIcon },
-    { label: 'Schedule', href: '/dietitian/schedule', icon: CalendarIcon },
-    { label: 'My Patients', href: '/dietitian/patients', icon: UsersIcon },
-    { label: 'Appointments', href: '/dietitian/appointments', icon: CalendarIcon },
-    { label: 'Profile', href: '/dietitian/profile', icon: UserIcon },
+    { label: 'Dashboard', href: '/dietitian', icon: Home },
+    { label: 'Schedule', href: '/dietitian/schedule', icon: Calendar },
+    { label: 'My Patients', href: '/dietitian/patients', icon: Users },
+    { label: 'Appointments', href: '/dietitian/appointments', icon: Calendar },
+    { label: 'Profile', href: '/dietitian/profile', icon: User },
   ],
   admin: [
-    { label: 'Dashboard', href: '/admin', icon: HomeIcon },
-    { label: 'Patient Management', href: '/admin/patients', icon: UsersIcon },
-    { label: 'Dietitian Management', href: '/admin/dietitians', icon: BriefcaseIcon },
-    { label: 'Appointments', href: '/admin/appointments', icon: CalendarIcon },
-    { label: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
-    { label: 'System Security', href: '/admin/security', icon: ShieldCheckIcon },
-    { label: 'Settings', href: '/admin/settings', icon: SettingsIcon },
+    { label: 'Dashboard', href: '/admin', icon: Home },
+    { label: 'Patient Management', href: '/admin/patients', icon: Users },
+    { label: 'Dietitian Management', href: '/admin/dietitians', icon: Briefcase },
+    { label: 'Appointments', href: '/admin/appointments', icon: Calendar },
+    { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    { label: 'System Security', href: '/admin/security', icon: ShieldCheck },
+    { label: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 }
 
@@ -76,7 +75,7 @@ export function Sidebar({ role }: SidebarProps) {
                     pathname === item.href && 'bg-sidebar-accent text-sidebar-accent-foreground'
                   )}
                 >
-                  <HugeiconsIcon icon={item.icon} className="mr-2 h-4 w-4" />
+                  <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
                 </Button>
               </Link>
@@ -87,7 +86,7 @@ export function Sidebar({ role }: SidebarProps) {
       
       <div className="p-2 border-t border-sidebar-border">
         <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-500">
-          <HugeiconsIcon icon={LogOutIcon} className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
       </div>
@@ -99,7 +98,7 @@ export function Sidebar({ role }: SidebarProps) {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="md:hidden">
-          <HugeiconsIcon icon={MenuIcon} />
+          <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
@@ -120,7 +119,7 @@ export function Sidebar({ role }: SidebarProps) {
                         pathname === item.href && 'bg-sidebar-accent text-sidebar-accent-foreground'
                       )}
                     >
-                      <HugeiconsIcon icon={item.icon} className="mr-2 h-4 w-4" />
+                      <item.icon className="mr-2 h-4 w-4" />
                       {item.label}
                     </Button>
                   </Link>
@@ -131,7 +130,7 @@ export function Sidebar({ role }: SidebarProps) {
           
           <div className="p-2 border-t border-sidebar-border">
             <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-500">
-              <HugeiconsIcon icon={LogOutIcon} className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
           </div>
