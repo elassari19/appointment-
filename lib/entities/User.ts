@@ -5,11 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { Appointment } from './Appointment';
-import { Availability } from './Availability';
+// Import types separately to avoid circular dependency during initialization
+import type { Appointment } from './Appointment';
+import type { Availability } from './Availability';
 
 export enum UserRole {
   PATIENT = 'patient',
@@ -66,17 +65,17 @@ export class User {
   updatedAt: Date;
 
   // Relationships
-  @OneToMany(() => Appointment, (appointment) => appointment.patient, {
+  @OneToMany('Appointment', 'patient', {
     cascade: true,
   })
   patientAppointments: Appointment[];
 
-  @OneToMany(() => Appointment, (appointment) => appointment.dietitian, {
+  @OneToMany('Appointment', 'dietitian', {
     cascade: true,
   })
   dietitianAppointments: Appointment[];
 
-  @OneToMany(() => Availability, (availability) => availability.dietitian, {
+  @OneToMany('Availability', 'dietitian', {
     cascade: true,
   })
   availabilities: Availability[];

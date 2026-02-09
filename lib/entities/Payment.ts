@@ -64,7 +64,7 @@ export class Payment {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne(() => Appointment, (appointment) => appointment.payments, {
+  @ManyToOne('Appointment', 'payments', {
     eager: false,
     onDelete: 'CASCADE',
   })

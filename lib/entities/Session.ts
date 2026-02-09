@@ -39,7 +39,7 @@ export class Session {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @ManyToOne('User', { eager: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
