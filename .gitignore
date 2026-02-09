@@ -43,8 +43,6 @@ next-env.d.ts
 # Editor settings
 .vscode/
 
-# Planning documents
-planning/
-
-# Opencode
+# Agnets
 /.opencode
+/.agents
