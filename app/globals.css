@@ -124,3 +124,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom styles for PureMed */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gradient-mesh {
+  background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+              radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+              radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #f0f4ff 0%, #fff1f2 50%, #fef9c3 100%);
+}
+
+.dark .hero-gradient {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%);
+}
+
+.bg-background-light {
+  background-color: #f8fafc;
+}
+
+.bg-background-dark {
+  background-color: #0f172a;
+}
+
+.text-primary {
+  color: #6366f1;
+}
+
+.bg-primary {
+  background-color: #6366f1;
+}
+
+.hover\:text-primary:hover {
+  color: #6366f1;
+}

@@ -1,42 +1,90 @@
-'use client'
+'use client';
 
-import { Bell, Search, User } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, Bell } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
-interface HeaderProps {
-  role: 'patient' | 'dietitian' | 'admin'
-}
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-export function Header({ role }: HeaderProps) {
+  const navLinks = [
+    { label: 'Home', href: '#', active: true },
+    { label: 'About Us', href: '#' },
+    { label: 'Services', href: '#' },
+    { label: 'Doctors', href: '#' },
+    { label: 'Appointments', href: '#' },
+    { label: 'Blog', href: '#' },
+  ];
+
   return (
-    <header className="border-b border-sidebar-border bg-background p-4 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <h1 className="text-xl md:text-2xl font-bold capitalize">{role} Dashboard</h1>
-      </div>
-      
-      <div className="flex items-center space-x-2 md:space-x-4">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input
-            type="text"
-            placeholder="Search..."
-            className="pl-8 w-40 md:w-64"
-          />
+    <nav className="fixed top-0 w-full z-50 px-6 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4 glass-card rounded-full shadow-lg">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <Link href={'/'} className="text-2xl font-extrabold tracking-tighter text-slate-900 dark:text-white uppercase">
+            Nutrison
+          </Link>
         </div>
 
-        <Button variant="ghost" size="icon" className="hidden md:block">
-          <Bell className="h-4 w-4" />
-        </Button>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link, index) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={`text-sm font-semibold hover:text-primary transition-colors ${
+                index === 0 ? '' : 'opacity-70'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <User className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="hidden md:inline capitalize">{role}</span>
+        {/* Right Side */}
+        <div className="flex items-center gap-4">
+          <Button className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700 hidden sm:flex">
+            Contact Us
+          </Button>
+          <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <Bell className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+          </button>
+          
+          {/* Mobile Menu */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <div className="flex flex-col space-y-4 mt-8">
+                {navLinks.map((link) => (
+                  <Button
+                    key={link.label}
+                    variant="outline"
+                    className="rounded-full bg-white text-black/90 hover:bg-gray-100 hover:text-black hover:font-bold w-full text-base"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Link href={link.href}>{link.label}</Link>
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  className="rounded-full bg-white text-black/90 hover:bg-gray-100 hover:text-black hover:font-bold w-full text-base mt-4"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact Us
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-    </header>
-  )
-}
+    </nav>
+  );
+};
+
+export default Header;
