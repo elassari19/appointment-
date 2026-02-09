@@ -1,5 +1,5 @@
 import { Sidebar } from '@/components/sidebar'
-import { Header } from '@/components/header'
+import { Header } from '@/components/dashboard-header'
 
 export default function DietitianDashboardLayout({
   children,
