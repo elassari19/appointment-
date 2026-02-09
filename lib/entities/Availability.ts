@@ -51,14 +51,14 @@ export class Availability {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne('User', 'availabilities', {
+  @ManyToOne(() => User, 'availabilities', {
     eager: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'dietitian_id' })
   dietitian: User;
 
-  @OneToMany('Appointment', 'availability', {
+  @OneToMany(() => Appointment, 'availability', {
     cascade: true,
   })
   appointments: Appointment[];
