@@ -1,0 +1,83 @@
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Appointment } from './Appointment';
+import { Availability } from './Availability';
+
+export enum UserRole {
+  PATIENT = 'patient',
+  DIETITIAN = 'dietitian',
+  ADMIN = 'admin',
+}
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 100 })
+  firstName: string;
+
+  @Column({ type: 'varchar', length: 100 })
+  lastName: string;
+
+  @Column({ type: 'varchar', unique: true }) // email must be unique
+  email: string;
+
+  @Column({ type: 'varchar', select: false }) // Don't select password by default
+  password: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.PATIENT,
+  })
+  role: UserRole;
+
+  @Column({ type: 'varchar', nullable: true })
+  phone?: string;
+
+  @Column({ type: 'date', nullable: true })
+  dateOfBirth?: Date;
+
+  @Column({ type: 'text', nullable: true })
+  profilePicture?: string;
+
+  @Column({ type: 'text', nullable: true })
+  bio?: string;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isVerified: boolean;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
+
+  // Relationships
+  @OneToMany(() => Appointment, (appointment) => appointment.patient, {
+    cascade: true,
+  })
+  patientAppointments: Appointment[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.dietitian, {
+    cascade: true,
+  })
+  dietitianAppointments: Appointment[];
+
+  @OneToMany(() => Availability, (availability) => availability.dietitian, {
+    cascade: true,
+  })
+  availabilities: Availability[];
+}

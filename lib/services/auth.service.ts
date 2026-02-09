@@ -1,0 +1,152 @@
+import { User } from '@/lib/entities/User';
+import { Session } from '@/lib/entities/Session';
+import { AppDataSource } from '@/lib/database';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { UserRole } from '@/lib/entities/User';
+
+export interface RegisterUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+  phone?: string;
+  dateOfBirth?: Date;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResult {
+  user: User;
+  session: Session;
+}
+
+export class AuthService {
+  private userRepository = AppDataSource.getRepository(User);
+  private sessionRepository = AppDataSource.getRepository(Session);
+
+  async register(userData: RegisterUserData): Promise<AuthResult> {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: userData.email },
+    });
+
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
+    // Create new user
+    const user = new User();
+    user.firstName = userData.firstName;
+    user.lastName = userData.lastName;
+    user.email = userData.email;
+    user.password = hashedPassword;
+    user.role = userData.role || UserRole.PATIENT;
+    user.phone = userData.phone;
+    user.dateOfBirth = userData.dateOfBirth;
+    user.isActive = true;
+    user.isVerified = false; // Will be verified later
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Create a session for the newly registered user
+    const session = await this.createSession(savedUser.id);
+
+    return { user: savedUser, session };
+  }
+
+  async login(credentials: LoginCredentials): Promise<AuthResult | null> {
+    // Find user by email
+    const user = await this.userRepository.findOne({
+      where: { email: credentials.email, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(
+      credentials.password,
+      user.password
+    );
+
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    // Create a new session
+    const session = await this.createSession(user.id);
+
+    return { user, session };
+  }
+
+  async logout(sessionToken: string): Promise<boolean> {
+    const session = await this.sessionRepository.findOne({
+      where: { token: sessionToken, isActive: true },
+    });
+
+    if (!session) {
+      return false;
+    }
+
+    session.isActive = false;
+    await this.sessionRepository.save(session);
+
+    return true;
+  }
+
+  async getUserBySessionToken(token: string): Promise<User | null> {
+    const session = await this.sessionRepository.findOne({
+      where: { token, isActive: true },
+    });
+
+    if (!session) {
+      return null;
+    }
+
+    return await this.userRepository.findOne({
+      where: { id: session.userId, isActive: true },
+    });
+  }
+
+  private async createSession(userId: string): Promise<Session> {
+    // First, invalidate any existing sessions for this user
+    await this.sessionRepository.update(
+      { userId, isActive: true },
+      { isActive: false }
+    );
+
+    // Create a new session
+    const session = new Session();
+    session.token = crypto.randomBytes(32).toString('hex'); // Generate random token
+    session.userId = userId;
+    
+    // Set expiration (e.g., 7 days)
+    const now = new Date();
+    session.expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    return await this.sessionRepository.save(session);
+  }
+
+  async validateUserRole(
+    sessionToken: string,
+    requiredRoles: UserRole[]
+  ): Promise<{ isValid: boolean; user?: User }> {
+    const user = await this.getUserBySessionToken(sessionToken);
+
+    if (!user || !requiredRoles.includes(user.role)) {
+      return { isValid: false };
+    }
+
+    return { isValid: true, user };
+  }
+}
