@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Appointment } from './Appointment';
 import { Availability } from './Availability';
+import { Session } from './Session';
 
 export enum UserRole {
   PATIENT = 'patient',

@@ -34,3 +34,36 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Database Setup
+
+This project uses TypeORM with PostgreSQL as the database. Follow these steps to set up your database:
+
+### Prerequisites
+- PostgreSQL server installed and running
+- Created a database for your application
+
+### Installation Steps
+1. Install PostgreSQL if you haven't already:
+   - On macOS: `brew install postgresql`
+   - On Ubuntu: `sudo apt-get install postgresql postgresql-contrib`
+
+2. Start the PostgreSQL service:
+   - On macOS: `brew services start postgresql`
+   - On Ubuntu: `sudo systemctl start postgresql`
+
+3. Create the database:
+   ```sql
+   CREATE DATABASE nutrison_db;
+   ```
+
+4. Copy the environment file and configure your database credentials:
+   ```bash
+   cp .env .env.local
+   # Then edit .env.local with your database credentials
+   ```
+
+5. Run database migrations (after setting up your models):
+   ```bash
+   # This would typically be done via a script in your package.json
+   ```

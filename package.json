@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:init": "ts-node -r tsconfig-paths/register ./lib/db-init.ts",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
