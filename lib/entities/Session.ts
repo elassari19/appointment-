@@ -12,13 +12,13 @@ import { User } from './User';
 @Entity('sessions')
 export class Session {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', unique: true }) // Session token
-  token: string;
+  token!: string;
 
   @Column({ type: 'uuid' }) // Reference to user ID
-  userId: string;
+  userId!: string;
 
   @Column({ type: 'timestamp', nullable: true }) // Expiration time
   expiresAt?: Date;
@@ -30,13 +30,13 @@ export class Session {
   userAgent?: string;
 
   @Column({ type: 'boolean', default: true }) // Whether the session is active
-  isActive: boolean;
+  isActive!: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, 'sessions', {
@@ -44,5 +44,5 @@ export class Session {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

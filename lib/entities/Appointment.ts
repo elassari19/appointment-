@@ -23,20 +23,20 @@ export enum AppointmentStatus {
 @Entity('appointments')
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'timestamp' })
-  startTime: Date;
+  startTime!: Date;
 
   @Column({ type: 'integer' }) // Duration in minutes
-  duration: number;
+  duration!: number;
 
   @Column({
     type: 'enum',
     enum: AppointmentStatus,
     default: AppointmentStatus.SCHEDULED,
   })
-  status: AppointmentStatus;
+  status!: AppointmentStatus;
 
   @Column({ type: 'text', nullable: true })
   notes?: string;
@@ -54,10 +54,10 @@ export class Appointment {
   cancellationReason?: string;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, 'patientAppointments', {
@@ -65,24 +65,24 @@ export class Appointment {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'patient_id' })
-  patient: User;
+  patient!: User;
 
   @ManyToOne(() => User, 'dietitianAppointments', {
     eager: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'dietitian_id' })
-  dietitian: User;
+  dietitian!: User;
 
   @ManyToOne(() => Availability, 'appointments', {
     eager: false,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'availability_id' })
-  availability: Availability;
+  availability!: Availability;
 
   @OneToMany(() => Payment, (payment) => payment.appointment, {
     cascade: true,
   })
-  payments: Payment[];
+  payments!: Payment[];
 }

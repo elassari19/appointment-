@@ -27,26 +27,26 @@ export enum PaymentMethod {
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 }) // Amount in SAR
-  amount: number;
+  amount!: number;
 
   @Column({ type: 'varchar', length: 50 }) // Currency code (SAR)
-  currency: string;
+  currency!: string;
 
   @Column({
     type: 'enum',
     enum: PaymentStatus,
     default: PaymentStatus.PENDING,
   })
-  status: PaymentStatus;
+  status!: PaymentStatus;
 
   @Column({
     type: 'enum',
     enum: PaymentMethod,
   })
-  method: PaymentMethod;
+  method!: PaymentMethod;
 
   @Column({ type: 'varchar', nullable: true }) // Transaction ID from payment provider
   transactionId?: string;
@@ -58,10 +58,10 @@ export class Payment {
   metadata?: string;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Relationships
   @ManyToOne(() => Appointment, 'payments', {
@@ -69,5 +69,5 @@ export class Payment {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'appointment_id' })
-  appointment: Appointment;
+  appointment!: Appointment;
 }

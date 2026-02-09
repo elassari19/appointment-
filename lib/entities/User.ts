@@ -19,26 +19,26 @@ export enum UserRole {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 100 })
-  firstName: string;
+  firstName!: string;
 
   @Column({ type: 'varchar', length: 100 })
-  lastName: string;
+  lastName!: string;
 
   @Column({ type: 'varchar', unique: true }) // email must be unique
-  email: string;
+  email!: string;
 
   @Column({ type: 'varchar', select: false }) // Don't select password by default
-  password: string;
+  password!: string;
 
   @Column({
     type: 'enum',
     enum: UserRole,
     default: UserRole.PATIENT,
   })
-  role: UserRole;
+  role!: UserRole;
 
   @Column({ type: 'varchar', nullable: true })
   phone?: string;
@@ -53,35 +53,35 @@ export class User {
   bio?: string;
 
   @Column({ type: 'boolean', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ type: 'boolean', default: false })
-  isVerified: boolean;
+  isVerified!: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Relationships
   @OneToMany(() => Appointment, 'patient', {
     cascade: true,
   })
-  patientAppointments: Appointment[];
+  patientAppointments!: Appointment[];
 
   @OneToMany(() => Appointment, 'dietitian', {
     cascade: true,
   })
-  dietitianAppointments: Appointment[];
+  dietitianAppointments!: Appointment[];
 
   @OneToMany(() => Availability, 'dietitian', {
     cascade: true,
   })
-  availabilities: Availability[];
+  availabilities!: Availability[];
 
   @OneToMany(() => Session, 'user', {
     cascade: true,
   })
-  sessions: Session[];
+  sessions!: Session[];
 }

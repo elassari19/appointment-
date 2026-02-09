@@ -24,31 +24,31 @@ export enum DayOfWeek {
 @Entity('availabilities')
 export class Availability {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({
     type: 'enum',
     enum: DayOfWeek,
   })
-  dayOfWeek: DayOfWeek;
+  dayOfWeek!: DayOfWeek;
 
   @Column({ type: 'time' }) // Format: HH:mm:ss
-  startTime: string;
+  startTime!: string;
 
   @Column({ type: 'time' }) // Format: HH:mm:ss
-  endTime: string;
+  endTime!: string;
 
   @Column({ type: 'boolean', default: true })
-  isAvailable: boolean;
+  isAvailable!: boolean;
 
   @Column({ type: 'integer', nullable: true }) // Duration in minutes, if null use default
   defaultDuration?: number;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, 'availabilities', {
@@ -56,10 +56,10 @@ export class Availability {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'dietitian_id' })
-  dietitian: User;
+  dietitian!: User;
 
   @OneToMany(() => Appointment, 'availability', {
     cascade: true,
   })
-  appointments: Appointment[];
+  appointments!: Appointment[];
 }
