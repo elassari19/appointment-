@@ -7,8 +7,20 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import Image from 'next/image';
+import {useLocale} from '@/contexts/LocaleContext';
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  title?: string;
+  subtitle?: string;
+  cta?: string;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = (props) => {
+  const {t} = useLocale();
+  const title = props.title || t('hero.title');
+  const subtitle = props.subtitle || t('hero.subtitle');
+  const cta = props.cta || t('hero.cta');
+
   return (
     <section className="pt-20 px-1 md:px-6">
       <div className="max-w-7xl mx-auto rounded-[3rem] hero-gradient p-6 sm:p-8 md:p-12 lg:p-20 relative overflow-hidden">
@@ -19,11 +31,11 @@ const HeroSection = () => {
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest">Expert Doctors</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] mb-6 sm:mb-8 tracking-tight">
-              Our Mission Delivering <span className="italic font-normal">Compassionate</span>, Patient-Centered Care
+              {title}
             </h1>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
               <Button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-5 sm:px-8 sm:py-6 rounded-full font-bold hover:scale-105 transition-transform w-full sm:w-auto">
-                Book an Appointment
+                {cta}
               </Button>
               <a className="flex items-center gap-2 font-bold group text-slate-900 dark:text-white" href="#">
                 Find a Doctor
@@ -33,7 +45,7 @@ const HeroSection = () => {
           </div>
           <div className="flex flex-col justify-end lg:pl-6 xl:pl-12">
             <p className="text-base sm:text-lg opacity-80 leading-relaxed mb-8 sm:mb-10 md:mb-12">
-              We strive to provide exceptional healthcare by focusing on compassion, innovation, and patient well-being — ensuring personalized care that empowers healthier lives and builds trust every step of the way.
+              {subtitle}
             </p>
             <div className="relative">
               <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] lg:h-[400px] rounded-3xl shadow-2xl relative">
