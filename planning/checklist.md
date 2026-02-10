@@ -11,8 +11,8 @@
 - [x] Create landing page and authentication UI
 - [x] Create separate dashboards for Patient, Dietitian, and Admin roles
 - [x] Implement mobile-first responsive design
-- [ ] Establish audit logging system
-- [ ] Implement Row-Level Security (RLS) policies at application level
+- [x] Establish audit logging system
+- [x] Implement Row-Level Security (RLS) policies at application level
 
 ## Phase 2: Core Appointment Features
 
