@@ -41,8 +41,8 @@ const Header = () => {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 px-8">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-10 py-5 glass-card rounded-2xl shadow-lg">
+    <nav className="fixed top-0 w-full z-50 px-8 py-5">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-10 glass-card  backdrop-blur rounded-2xl shadow-lg">
         <div className="flex items-center gap-3">
           <Link href={`/${locale}`} className="text-3xl font-extrabold tracking-tighter text-slate-900 dark:text-white uppercase">
             Nutrison
@@ -145,10 +145,6 @@ const Header = () => {
               </>
             )}
           </div>
-
-          <Button className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-8 py-4 rounded-xl font-bold text-base shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700 hidden sm:flex">
-            {t('nav.contactUs')}
-          </Button>
 
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>

@@ -34,9 +34,13 @@ const HeroSection: React.FC<HeroSectionProps> = (props) => {
               {title}
             </h1>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
-              <Button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-5 sm:px-8 sm:py-6 rounded-full font-bold hover:scale-105 transition-transform w-full sm:w-auto">
-                {cta}
-              </Button>
+              <div className="group relative">
+                <div className="-inset-0.5 group-hover:opacity-50 transition duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-pink-500 opacity-30 rounded-full absolute blur-lg" />
+                <Button variant="cta" size='icon-lg' className="w-full sm:w-auto relative">
+                  {cta}
+                  <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
               <a className="flex items-center gap-2 font-bold group text-slate-900 dark:text-white" href="#">
                 Find a Doctor
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
