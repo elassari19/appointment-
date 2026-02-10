@@ -1,0 +1,25 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "aboutUs": "About Us",
+    "services": "Services",
+    "doctors": "Doctors",
+    "appointments": "Appointments",
+    "blog": "Blog",
+    "contactUs": "Contact Us"
+  },
+  "Hero": {
+    "title": "Expert Healthcare Services",
+    "subtitle": "Compassionate, patient-centered care for you and your family",
+    "cta": "Book Appointment"
+  },
+  "Services": {
+    "title": "Our Services",
+    "subtitle": "Comprehensive healthcare solutions tailored to your needs"
+  },
+  "Common": {
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  }
+}
