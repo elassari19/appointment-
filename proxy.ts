@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// This function can be marked `async` if using `await` inside
-export function proxy(request: NextRequest) {
-  return NextResponse.redirect(new URL('/home', request.url))
+const locales = ['en', 'ar'];
+
+export default function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
+  if (pathname === '/' || pathname === '') {
+    const cookie = request.cookies.get('locale')?.value;
+    let locale = cookie && locales.includes(cookie) ? cookie : 'en';
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  }
+  
+  return NextResponse.next();
 }
 
-// Alternatively, you can use a default export:
-// export default function proxy(request: NextRequest) { ... }
-
 export const config = {
-  matcher: '/about/:path*',
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 }
