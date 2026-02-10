@@ -79,7 +79,7 @@ export default function SignupPage() {
       });
 
       if (response.ok) {
-        router.push('/auth/login');
+        router.push('/login');
       } else {
         const errorData = await response.json();
         setGeneralError(errorData.error || 'Signup failed');
@@ -258,7 +258,7 @@ export default function SignupPage() {
 
               <div className="text-center text-sm text-white/70 animate-in fade-in duration-700 delay-700">
                   {t('auth.signup.alreadyHaveAccount')}
-                  <Link href="/auth/login" className="text-orange-400 hover:text-orange-300 transition-colors font-medium ml-1">
+                  <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors font-medium ml-1">
                     {t('auth.signup.loginLink')}
                   </Link>
                 </div>

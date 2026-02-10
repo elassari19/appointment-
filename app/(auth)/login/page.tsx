@@ -176,7 +176,7 @@ export default function LoginPage() {
                     </div>
                     <span>{t('auth.login.rememberMe')}</span>
                   </label>
-                  <Link href="/auth/forgot-password" className="text-orange-400 hover:text-orange-300 transition-colors">
+                  <Link href="/forgot-password" className="text-orange-400 hover:text-orange-300 transition-colors">
                     {t('auth.login.forgotPassword')}
                   </Link>
                 </div>
@@ -224,7 +224,7 @@ export default function LoginPage() {
 
               <div className="text-center text-sm text-white/70 animate-in fade-in duration-700 delay-1100">
                   {t('auth.login.dontHaveAccount')}
-                  <Link href="/auth/signup" className="text-orange-400 hover:text-orange-300 transition-colors font-medium ml-1">
+                  <Link href="/signup" className="text-orange-400 hover:text-orange-300 transition-colors font-medium ml-1">
                     {t('auth.login.signUpLink')}
                   </Link>
                 </div>
