@@ -69,16 +69,26 @@ export class AuthService {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResult | null> {
-    // Find user by email
+    // Find user by email - explicitly select password since it's excluded by default
     const user = await this.userRepository.findOne({
       where: { email: credentials.email, isActive: true },
+      select: ['id', 'firstName', 'lastName', 'email', 'password', 'role', 'isActive'],
     });
+
+    console.log('Login attempt for:', credentials.email);
+    console.log('User found:', user ? 'yes' : 'no');
+    console.log('User active:', user?.isActive);
+    console.log('User has password:', !!user?.password);
 
     if (!user) {
       return null;
     }
 
-    // Compare passwords
+    if (!user.password) {
+      console.log('No password hash found for user');
+      return null;
+    }
+
     const isPasswordValid = await bcrypt.compare(
       credentials.password,
       user.password
