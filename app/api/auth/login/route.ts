@@ -1,26 +1,31 @@
 import { NextRequest } from 'next/server';
 import { AuthService, LoginCredentials } from '@/lib/services/auth.service';
 import { DatabaseService } from '@/lib/services/database.service';
+import { z } from 'zod';
 
 const authService = new AuthService();
 
+const loginSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'Password is required'),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    // Initialize database connection
     await DatabaseService.initialize();
 
     const body = await request.json();
-    const { email, password }: LoginCredentials = body;
-
-    // Validate input
-    if (!email || !password) {
+    
+    const validationResult = loginSchema.safeParse(body);
+    if (!validationResult.success) {
       return Response.json(
-        { error: 'Email and password are required' },
+        { error: validationResult.error.errors[0].message },
         { status: 400 }
       );
     }
 
-    // Attempt to log in
+    const { email, password }: LoginCredentials = validationResult.data;
+
     const result = await authService.login({ email, password });
 
     if (!result) {
@@ -30,7 +35,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return user and session data
     return Response.json({
       user: {
         id: result.user.id,
