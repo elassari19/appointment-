@@ -64,6 +64,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'footer.cookies': 'Cookies Settings',
     'lang.english': 'English',
     'lang.arabic': 'العربية',
+    'auth.signIn': 'Sign In',
+    'auth.signUp': 'Sign Up',
+    'auth.profile': 'Profile',
+    'auth.settings': 'Settings',
+    'auth.logout': 'Logout',
   },
   ar: {
     'nav.home': 'الرئيسية',
@@ -118,6 +123,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'footer.cookies': 'إعدادات ملفات تعريف الارتباط',
     'lang.english': 'English',
     'lang.arabic': 'العربية',
+    'auth.signIn': 'تسجيل الدخول',
+    'auth.signUp': 'إنشاء حساب',
+    'auth.profile': 'الملف الشخصي',
+    'auth.settings': 'الإعدادات',
+    'auth.logout': 'تسجيل الخروج',
   }
 };
 

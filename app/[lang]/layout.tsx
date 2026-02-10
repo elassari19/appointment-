@@ -1,7 +1,8 @@
 import {LocaleProvider} from '@/contexts/LocaleContext';
+import {AuthProvider} from '@/contexts/AuthContext';
 import type {Locale} from '@/contexts/LocaleContext';
 import Header from '@/components/header';
- 
+
 export default async function LangLayout({
   children,
   params
@@ -16,8 +17,10 @@ export default async function LangLayout({
     <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <body>
         <LocaleProvider locale={locale}>
-          <Header />
-          <div>{children}</div>
+          <AuthProvider>
+            <Header />
+            <div>{children}</div>
+          </AuthProvider>
         </LocaleProvider>
       </body>
     </html>

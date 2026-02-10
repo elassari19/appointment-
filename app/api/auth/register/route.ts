@@ -4,8 +4,6 @@ import { DatabaseService } from '@/lib/services/database.service';
 import { UserRole } from '@/lib/entities/User';
 import { z } from 'zod';
 
-const authService = new AuthService();
-
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
@@ -30,6 +28,7 @@ export async function POST(request: NextRequest) {
 
     const { firstName, lastName, email, password, role } = validationResult.data;
 
+    const authService = new AuthService();
     const result = await authService.register({
       firstName,
       lastName,

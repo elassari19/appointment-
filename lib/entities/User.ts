@@ -6,8 +6,6 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Appointment } from './Appointment';
-import { Availability } from './Availability';
 import { Session } from './Session';
 
 export enum UserRole {
@@ -65,20 +63,20 @@ export class User {
   updatedAt!: Date;
 
   // Relationships
-  @OneToMany(() => Appointment, 'patient', {
+  @OneToMany('Appointment', 'patient', {
     cascade: true,
   })
-  patientAppointments!: Appointment[];
+  patientAppointments!: any[];
 
-  @OneToMany(() => Appointment, 'dietitian', {
+  @OneToMany('Appointment', 'dietitian', {
     cascade: true,
   })
-  dietitianAppointments!: Appointment[];
+  dietitianAppointments!: any[];
 
-  @OneToMany(() => Availability, 'dietitian', {
+  @OneToMany('Availability', 'dietitian', {
     cascade: true,
   })
-  availabilities!: Availability[];
+  availabilities!: any[];
 
   @OneToMany(() => Session, 'user', {
     cascade: true,

@@ -8,9 +8,6 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { User } from './User';
-import { Availability } from './Availability';
-import { Payment } from './Payment';
 
 export enum AppointmentStatus {
   SCHEDULED = 'scheduled',
@@ -60,29 +57,29 @@ export class Appointment {
   updatedAt!: Date;
 
   // Relationships
-  @ManyToOne(() => User, 'patientAppointments', {
+  @ManyToOne('User', 'patientAppointments', {
     eager: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'patient_id' })
-  patient!: User;
+  patient!: any;
 
-  @ManyToOne(() => User, 'dietitianAppointments', {
+  @ManyToOne('User', 'dietitianAppointments', {
     eager: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'dietitian_id' })
-  dietitian!: User;
+  dietitian!: any;
 
-  @ManyToOne(() => Availability, 'appointments', {
+  @ManyToOne('Availability', 'appointments', {
     eager: false,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'availability_id' })
-  availability!: Availability;
+  availability!: any;
 
-  @OneToMany(() => Payment, (payment) => payment.appointment, {
+  @OneToMany('Payment', 'appointment', {
     cascade: true,
   })
-  payments!: Payment[];
+  payments!: any[];
 }

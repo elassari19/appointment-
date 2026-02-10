@@ -1,6 +1,6 @@
+import { AppDataSource } from '@/lib/database';
 import { User } from '@/lib/entities/User';
 import { Session } from '@/lib/entities/Session';
-import { AppDataSource } from '@/lib/database';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { UserRole } from '@/lib/entities/User';
@@ -26,8 +26,13 @@ export interface AuthResult {
 }
 
 export class AuthService {
-  private userRepository = AppDataSource.getRepository(User);
-  private sessionRepository = AppDataSource.getRepository(Session);
+  private get userRepository() {
+    return AppDataSource.getRepository(User);
+  }
+
+  private get sessionRepository() {
+    return AppDataSource.getRepository(Session);
+  }
 
   async register(userData: RegisterUserData): Promise<AuthResult> {
     // Check if user already exists

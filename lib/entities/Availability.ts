@@ -8,8 +8,6 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { User } from './User';
-import { Appointment } from './Appointment';
 
 export enum DayOfWeek {
   MONDAY = 'monday',
@@ -51,15 +49,15 @@ export class Availability {
   updatedAt!: Date;
 
   // Relationships
-  @ManyToOne(() => User, 'availabilities', {
+  @ManyToOne('User', 'availabilities', {
     eager: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'dietitian_id' })
-  dietitian!: User;
+  dietitian!: any;
 
-  @OneToMany(() => Appointment, 'availability', {
+  @OneToMany('Appointment', 'availability', {
     cascade: true,
   })
-  appointments!: Appointment[];
+  appointments!: any[];
 }

@@ -1,4 +1,10 @@
 import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+import { Session } from './entities/Session';
+import { Appointment } from './entities/Appointment';
+import { Availability } from './entities/Availability';
+import { Payment } from './entities/Payment';
+import { AuditLog } from './entities/AuditLog';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -8,16 +14,15 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'nutrison_db',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-  synchronize: false, // Set to false in production, use migrations instead
+  synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
-  entities: [__dirname + '/entities/*{.js,.ts}'],
+  entities: [User, Session, Appointment, Availability, Payment, AuditLog],
   migrations: [__dirname + '/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {
-    // Connection pool settings
-    max: 20, // Maximum number of connections in the pool
-    min: 5,  // Minimum number of connections in the pool
-    idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+    max: 20,
+    min: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   },
 });
