@@ -41,7 +41,7 @@ const Header = () => {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 px-8 py-5">
+    <nav className="fixed top-0 w-full z-50 px-8">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-10 py-5 glass-card rounded-2xl shadow-lg">
         <div className="flex items-center gap-3">
           <Link href={`/${locale}`} className="text-3xl font-extrabold tracking-tighter text-slate-900 dark:text-white uppercase">
