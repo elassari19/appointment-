@@ -23,6 +23,7 @@ const mainNav: NavItem[] = [
 const managementNav: NavItem[] = [
   { title: "Reports", url: "/admin/reports", icon: "bar_chart", roles: ["admin", "doctor"] },
   { title: "Staff", url: "/admin/staff", icon: "badge", roles: ["admin"] },
+  { title: "Audit Logs", url: "/admin/audit-logs", icon: "history_toggle_off", roles: ["admin"] },
   { title: "Settings", url: "/admin/settings", icon: "settings", roles: ["admin", "doctor", "patient"] },
 ];
 
