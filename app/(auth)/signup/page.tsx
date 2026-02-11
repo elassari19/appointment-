@@ -102,22 +102,21 @@ export default function SignupPage() {
   return (
     <div>
       <div className="relative w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
+        <div className="relative bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
           
           <div className="flex flex-col lg:flex-row min-h-[700px]">
             <div className="flex-1 p-8 space-y-6 overflow-y-auto">
               <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl mx-auto shadow-lg flex items-center justify-center">
-                  <Users className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 bg-[#facc15]/20 rounded-2xl mx-auto shadow-sm flex items-center justify-center">
+                  <Users className="w-8 h-8 text-[#facc15]" />
                 </div>
-                <h1 className="text-4xl font-light text-white tracking-tight uppercase">{t('auth.signup.createAccount')}</h1>
-                <p className="text-white/70 text-sm">{t('auth.signup.joinSubtitle')}</p>
+                <h1 className="text-2xl font-semibold text-[#1e293b] tracking-tight">{t('auth.signup.createAccount')}</h1>
+                <p className="text-slate-500 text-sm">{t('auth.signup.joinSubtitle')}</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
                 {generalError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400">
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm">{generalError}</span>
                   </div>
@@ -125,79 +124,79 @@ export default function SignupPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/90 block">{t('auth.signup.firstNameLabel')}</label>
+                    <label className="text-sm font-medium text-slate-700 block">{t('auth.signup.firstNameLabel')}</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <User className="w-5 h-5 text-white/50" />
+                        <User className="w-5 h-5 text-slate-400" />
                       </div>
                       <input
                         type="text"
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-4 py-3 bg-white/10 border ${errors.firstName ? 'border-red-500' : 'border-white/20'} rounded-xl text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all duration-300`}
+                        className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.firstName ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 transition-all duration-300`}
                         placeholder={t('auth.signup.firstNamePlaceholder')}
                         required
                       />
                     </div>
-                    {errors.firstName && <p className="text-xs text-red-400">{errors.firstName}</p>}
+                    {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/90 block">{t('auth.signup.lastNameLabel')}</label>
+                    <label className="text-sm font-medium text-slate-700 block">{t('auth.signup.lastNameLabel')}</label>
                     <div className="relative">
                       <input
                         type="text"
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className={`w-full px-4 py-3 bg-white/10 border ${errors.lastName ? 'border-red-500' : 'border-white/20'} rounded-xl text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all duration-300`}
+                        className={`w-full px-4 py-3 bg-slate-50 border ${errors.lastName ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 transition-all duration-300`}
                         placeholder={t('auth.signup.lastNamePlaceholder')}
                         required
                       />
                     </div>
-                    {errors.lastName && <p className="text-xs text-red-400">{errors.lastName}</p>}
+                    {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/90 block">{t('auth.signup.emailLabel')}</label>
+                  <label className="text-sm font-medium text-slate-700 block">{t('auth.signup.emailLabel')}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="w-5 h-5 text-white/50" />
+                      <Mail className="w-5 h-5 text-slate-400" />
                     </div>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full pl-10 pr-4 py-3 bg-white/10 border ${errors.email ? 'border-red-500' : 'border-white/20'} rounded-xl text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all duration-300`}
+                      className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 transition-all duration-300`}
                       placeholder={t('auth.signup.emailPlaceholder')}
                       required
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
+                  {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/90 block">{t('auth.signup.passwordLabel')}</label>
+                  <label className="text-sm font-medium text-slate-700 block">{t('auth.signup.passwordLabel')}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="w-5 h-5 text-white/50" />
+                      <Lock className="w-5 h-5 text-slate-400" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      className={`w-full pl-10 pr-12 py-3 bg-white/10 border ${errors.password ? 'border-red-500' : 'border-white/20'} rounded-xl text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all duration-300`}
+                      className={`w-full pl-10 pr-12 py-3 bg-slate-50 border ${errors.password ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 transition-all duration-300`}
                       placeholder={t('auth.signup.passwordPlaceholder')}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/50 hover:text-white/80 transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -206,44 +205,44 @@ export default function SignupPage() {
                     <div className="space-y-1 pt-2">
                       {passwordRequirements.map((req, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-xs">
-                          <CheckCircle2 className={`w-3 h-3 ${req.met ? 'text-green-400' : 'text-white/30'}`} />
-                          <span className={req.met ? 'text-green-400' : 'text-white/50'}>{req.text}</span>
+                          <CheckCircle2 className={`w-3 h-3 ${req.met ? 'text-[#facc15]' : 'text-slate-300'}`} />
+                          <span className={req.met ? 'text-slate-700' : 'text-slate-400'}>{req.text}</span>
                         </div>
                       ))}
                     </div>
                   )}
-                  {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
+                  {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/90 block">{t('auth.signup.accountTypeLabel')}</label>
+                  <label className="text-sm font-medium text-slate-700 block">{t('auth.signup.accountTypeLabel')}</label>
                   <Select value={formData.role} onValueChange={handleRoleChange}>
-                    <SelectTrigger className={`w-full py-3 bg-white/10 border ${errors.role ? 'border-red-500' : 'border-white/20'} rounded-xl text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all duration-300`}>
-                      <Users className="w-5 h-5 mr-2 text-white/50" />
-                      <SelectValue placeholder={t('auth.signup.accountTypePlaceholder')} className="text-white/80" />
+                    <SelectTrigger className={`w-full py-3 bg-slate-50 border ${errors.role ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 transition-all duration-300`}>
+                      <Users className="w-5 h-5 mr-2 text-slate-400" />
+                      <SelectValue placeholder={t('auth.signup.accountTypePlaceholder')} className="text-slate-700" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-white/20 text-white">
-                      <SelectItem value="patient" className="focus:bg-white/10">
+                    <SelectContent className="bg-white border-slate-200 text-slate-700">
+                      <SelectItem value="patient" className="focus:bg-slate-50">
                         <div className="flex items-center gap-2">
                           <span>{t('auth.signup.patientType')}</span>
-                          <span className="text-xs text-orange-400">- {t('auth.signup.patientTypeDesc')}</span>
+                          <span className="text-xs text-[#facc15]">- {t('auth.signup.patientTypeDesc')}</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="dietitian" className="focus:bg-white/10">
+                      <SelectItem value="dietitian" className="focus:bg-slate-50">
                         <div className="flex items-center gap-2">
                           <span>{t('auth.signup.dietitianType')}</span>
-                          <span className="text-xs text-pink-400">- {t('auth.signup.dietitianTypeDesc')}</span>
+                          <span className="text-xs text-slate-500">- {t('auth.signup.dietitianTypeDesc')}</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.role && <p className="text-xs text-red-400">{errors.role}</p>}
+                  {errors.role && <p className="text-xs text-red-500">{errors.role}</p>}
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex font-medium text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-xl py-3 px-4 shadow-lg space-x-2 items-center justify-center"
+                  className="w-full hover:shadow-lg transform hover:scale-[1.01] transition-all duration-300 flex font-medium text-slate-900 bg-[#facc15] rounded-xl py-3 px-4 shadow-sm space-x-2 items-center justify-center"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -256,89 +255,87 @@ export default function SignupPage() {
                 </button>
               </form>
 
-              <div className="text-center text-sm text-white/70 animate-in fade-in duration-700 delay-700">
-                  {t('auth.signup.alreadyHaveAccount')}
-                  <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors font-medium ml-1">
-                    {t('auth.signup.loginLink')}
-                  </Link>
-                </div>
+              <div className="text-center text-sm text-slate-500 animate-in fade-in duration-700 delay-700">
+                {t('auth.signup.alreadyHaveAccount')}
+                <Link href="/login" className="text-[#facc15] hover:text-[#eab308] transition-colors font-medium ml-1">
+                  {t('auth.signup.loginLink')}
+                </Link>
+              </div>
             </div>
 
-            <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+            <div className="hidden lg:block w-px bg-slate-200"></div>
 
-            <div className="flex-1 p-8 flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 bg-gradient-to-br from-orange-500/10 to-pink-500/10">
-<div className="space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-pink-500/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                    <Sparkles className="w-[40px] h-[40px] text-orange-300" />
-                  </div>
-                  <h2 className="text-4xl font-light text-white tracking-tight">{t('auth.signup.startJourney')}</h2>
-                  <p className="text-white/70 text-lg leading-relaxed">{t('auth.signup.startJourneyDesc')}</p>
+            <div className="flex-1 p-8 flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 bg-slate-50">
+              <div className="space-y-4">
+                <div className="w-20 h-20 bg-[#facc15]/20 rounded-3xl flex items-center justify-center border border-slate-200">
+                  <Sparkles className="w-[40px] h-[40px] text-[#facc15]" />
                 </div>
+                <h2 className="text-2xl font-semibold text-[#1e293b] tracking-tight">{t('auth.signup.startJourney')}</h2>
+                <p className="text-slate-600 text-base leading-relaxed">{t('auth.signup.startJourneyDesc')}</p>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex items-start space-x-3 animate-in fade-in slide-in-from-right-4 duration-700 delay-500">
-                  <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-green-400" />
+                  <div className="w-6 h-6 bg-[#facc15]/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-[#facc15]" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{t('auth.signup.feature1Title')}</h3>
-                    <p className="text-white/60 text-sm">{t('auth.signup.feature1Desc')}</p>
+                    <h3 className="text-slate-800 font-medium">{t('auth.signup.feature1Title')}</h3>
+                    <p className="text-slate-500 text-sm">{t('auth.signup.feature1Desc')}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3 animate-in fade-in slide-in-from-right-4 duration-700 delay-700">
-                  <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-green-400" />
+                  <div className="w-6 h-6 bg-[#facc15]/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-[#facc15]" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{t('auth.signup.feature2Title')}</h3>
-                    <p className="text-white/60 text-sm">{t('auth.signup.feature2Desc')}</p>
+                    <h3 className="text-slate-800 font-medium">{t('auth.signup.feature2Title')}</h3>
+                    <p className="text-slate-500 text-sm">{t('auth.signup.feature2Desc')}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3 animate-in fade-in slide-in-from-right-4 duration-700 delay-900">
-                  <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-green-400" />
+                  <div className="w-6 h-6 bg-[#facc15]/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-[#facc15]" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{t('auth.signup.feature3Title')}</h3>
-                    <p className="text-white/60 text-sm">{t('auth.signup.feature3Desc')}</p>
+                    <h3 className="text-slate-800 font-medium">{t('auth.signup.feature3Title')}</h3>
+                    <p className="text-slate-500 text-sm">{t('auth.signup.feature3Desc')}</p>
                   </div>
                 </div>
               </div>
 
-<div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1100">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-pink-400 rounded-full flex items-center justify-center text-white font-medium">
-                      MJ
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium text-sm">{t('auth.signup.testimonialAuthor')}</h4>
-                      <p className="text-white/60 text-xs">{t('auth.signup.testimonialRole')}</p>
-                    </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1100">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-[#facc15] rounded-full flex items-center justify-center text-slate-900 font-medium">
+                    MJ
                   </div>
-                  <p className="text-sm font-light text-white/80">"{t('auth.signup.testimonialQuote')}"</p>
+                  <div>
+                    <h4 className="text-slate-800 font-medium text-sm">{t('auth.signup.testimonialAuthor')}</h4>
+                    <p className="text-slate-500 text-xs">{t('auth.signup.testimonialRole')}</p>
+                  </div>
                 </div>
+                <p className="text-sm font-light text-slate-600">"{t('auth.signup.testimonialQuote')}"</p>
+              </div>
 
               <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1300">
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-white">98%</div>
-                    <div className="text-white/60 text-xs">{t('auth.signup.statsSuccess')}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-white">50K+</div>
-                    <div className="text-white/60 text-xs">{t('auth.signup.statsMeals')}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-white">24/7</div>
-                    <div className="text-white/60 text-xs">{t('auth.signup.statsSupport')}</div>
-                  </div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-slate-800">98%</div>
+                  <div className="text-slate-500 text-xs">{t('auth.signup.statsSuccess')}</div>
                 </div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-slate-800">50K+</div>
+                  <div className="text-slate-500 text-xs">{t('auth.signup.statsMeals')}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-slate-800">24/7</div>
+                  <div className="text-slate-500 text-xs">{t('auth.signup.statsSupport')}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-orange-600/20 to-pink-600/20 blur-3xl"></div>
       </div>
     </div>
   );

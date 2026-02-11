@@ -19,9 +19,9 @@ export default async function AuthLayout({
         <div 
           lang={locale} 
           dir={locale === 'ar' ? 'rtl' : 'ltr'}
-          className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black/80 via-black/60 to-black/90 p-2 lg:p-8 relative overflow-hidden"
+          className="h-full flex items-center justify-center relative overflow-hidden"
         >
-          <BackgroundShapes />
+          {/* <BackgroundShapes /> */}
           {children}
         </div>
       </AuthProvider>
