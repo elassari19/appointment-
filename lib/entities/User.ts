@@ -57,6 +57,12 @@ export class User {
   isVerified!: boolean;
 
   @Column({ type: 'varchar', nullable: true })
+  verificationToken?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  verificationTokenExpiresAt?: Date;
+
+  @Column({ type: 'varchar', nullable: true })
   resetPasswordToken?: string;
 
   @Column({ type: 'timestamp', nullable: true })

@@ -244,4 +244,65 @@ export class AuthService {
 
     return true;
   }
+
+  async generateVerificationToken(email: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({
+      where: { email, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiresAt = expiresAt;
+
+    await this.userRepository.save(user);
+
+    return verificationToken;
+  }
+
+  async verifyEmail(token: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: {
+        verificationToken: token,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      return false;
+    }
+
+    if (!user.verificationTokenExpiresAt || user.verificationTokenExpiresAt < new Date()) {
+      return false;
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiresAt = undefined;
+
+    await this.userRepository.save(user);
+
+    return true;
+  }
+
+  async resendVerificationEmail(email: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({
+      where: { email, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    if (user.isVerified) {
+      return null;
+    }
+
+    return this.generateVerificationToken(email);
+  }
 }
