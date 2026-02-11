@@ -96,17 +96,17 @@ export default function LoginPage() {
 
   return (
     <div>
-      <div className="relative w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <div className="relative w-full max-w-sm sm:max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="relative bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
           
-          <div className="flex flex-col lg:flex-row min-h-[600px]">
-            <div className="flex-1 p-8 space-y-6">
+          <div className="flex flex-col lg:flex-row">
+            <div className="flex-1 p-6 sm:p-8 space-y-6 overflow-y-auto">
               <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
                 <div className="w-16 h-16 bg-[#facc15]/20 rounded-2xl mx-auto shadow-sm flex items-center justify-center">
                   <Lock className="w-8 h-8 text-[#facc15]" />
                 </div>
                 <h1 className="text-2xl font-semibold text-[#1e293b] tracking-tight">{t('auth.login.welcomeBack')}</h1>
-                <p className="text-slate-500 text-sm">{t('auth.login.signInToAccount')}</p>
+                {/* <p className="text-slate-500 text-sm">{t('auth.login.signInToAccount')}</p> */}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
@@ -231,7 +231,7 @@ export default function LoginPage() {
 
             <div className="hidden lg:block w-px bg-slate-200"></div>
 
-            <div className="flex-1 p-8 flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 bg-slate-50">
+            <div className="hidden lg:flex flex-1 p-8 flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 bg-slate-50">
               <div className="space-y-4">
                 <div className="w-20 h-20 bg-[#facc15]/20 rounded-3xl flex items-center justify-center border border-slate-200">
                   <Sparkles className="w-[40px] h-[40px] text-[#facc15]" />
@@ -272,7 +272,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1100">
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1100">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-10 h-10 bg-[#facc15] rounded-full flex items-center justify-center text-slate-900 font-medium">
                     SC
@@ -285,7 +285,7 @@ export default function LoginPage() {
                 <p className="text-sm font-light text-slate-600">"{t('auth.login.testimonialQuote')}"</p>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1300">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1300">
                 <div className="text-center">
                   <div className="text-2xl font-semibold text-slate-800">10K+</div>
                   <div className="text-slate-500 text-xs">{t('auth.login.statsActiveUsers')}</div>
