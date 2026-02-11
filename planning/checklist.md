@@ -35,11 +35,11 @@
 - [ ] Create appointment management UI for all roles
 
 ### Availability Management
-- [ ] Implement dietitian availability scheduling
-- [ ] Create availability calendar UI
+- [x] Implement dietitian availability scheduling
+- [x] Create availability calendar UI
 - [ ] Implement bulk availability updates
-- [ ] Implement time slot blocking [ ] and exceptions
-- Create availability conflict detection
+- [ ] Implement time slot blocking and exceptions
+- [x] Create availability conflict detection
 
 ## Phase 3: Integrations
 
