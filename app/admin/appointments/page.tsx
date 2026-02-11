@@ -1,378 +1,362 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Video, Search, Loader2, AlertCircle, Check, X } from 'lucide-react';
+import { AppointmentStatus } from '@/lib/entities/Appointment';
 
-const stats = [
-  {
-    label: 'Total Booking',
-    value: '1,482',
-    change: '+12%',
-    trend: 'up',
-    icon: 'event_note',
-    color: 'blue',
-  },
-  {
-    label: 'Confirmed',
-    value: '948',
-    change: '+5%',
-    trend: 'up',
-    icon: 'check_circle_outline',
-    color: 'emerald',
-  },
-  {
-    label: 'Pending',
-    value: '156',
-    change: '-2%',
-    trend: 'down',
-    icon: 'history',
-    color: 'amber',
-  },
-  {
-    label: 'Cancelled',
-    value: '24',
-    change: '-10%',
-    trend: 'down',
-    icon: 'cancel_presentation',
-    color: 'rose',
-  },
-];
+interface Appointment {
+  id: string;
+  startTime: string;
+  duration: number;
+  status: AppointmentStatus;
+  notes?: string;
+  meetingLink?: string;
+  patient: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  dietitian: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  cancellationReason?: string;
+  createdAt: string;
+}
 
-const appointments = [
-  {
-    id: '#AP-2931',
-    patient: { name: 'Sarah Jenkins', email: 'sarahj@example.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face' },
-    doctor: { name: 'Dr. Sarah Mitchell', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
-    date: 'Feb 15, 2026',
-    time: '10:00 AM',
-    type: 'Video',
-    status: 'Confirmed',
-  },
-  {
-    id: '#AP-2932',
-    patient: { name: 'Michael Roberts', email: 'm.roberts@email.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' },
-    doctor: { name: 'Dr. James Wilson', avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face' },
-    date: 'Feb 15, 2026',
-    time: '11:30 AM',
-    type: 'In-Person',
-    status: 'Pending',
-  },
-  {
-    id: '#AP-2933',
-    patient: { name: 'Emily Davis', email: 'emily.d@test.com', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face' },
-    doctor: { name: 'Dr. Alex Carter', avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face' },
-    date: 'Feb 15, 2026',
-    time: '02:00 PM',
-    type: 'Video',
-    status: 'Cancelled',
-  },
-  {
-    id: '#AP-2934',
-    patient: { name: 'David Kim', email: 'dkim88@work.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' },
-    doctor: { name: 'Dr. Sarah Mitchell', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
-    date: 'Feb 16, 2026',
-    time: '09:15 AM',
-    type: 'In-Person',
-    status: 'Confirmed',
-  },
-];
+export default function AdminAppointmentsPage() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'cancelled'>('upcoming');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [actionType, setActionType] = useState<'confirm' | 'cancel'>('confirm');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'Confirmed':
-      return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
-          Confirmed
-        </span>
-      );
-    case 'Pending':
-      return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span>
-          Pending
-        </span>
-      );
-    case 'Cancelled':
-      return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 line-through opacity-60">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span>
-          Cancelled
-        </span>
-      );
-    default:
-      return null;
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/appointments');
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(data.appointments || []);
+      } else {
+        setError('Failed to load appointments');
+      }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppointmentAction = async (appointmentId: string, status: AppointmentStatus, reason?: string) => {
+    setIsProcessing(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, reason }),
+      });
+
+      if (response.ok) {
+        setSelectedAppointment(null);
+        setCancelReason('');
+        fetchAppointments();
+      } else {
+        setError('Failed to update appointment');
+      }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const filteredAppointments = appointments
+    .filter((apt) => {
+      const aptDate = new Date(apt.startTime);
+      const now = new Date();
+
+      let matchesFilter = true;
+      if (filter === 'upcoming') {
+        matchesFilter = aptDate >= now && apt.status !== AppointmentStatus.CANCELLED;
+      } else if (filter === 'past') {
+        matchesFilter = aptDate < now || apt.status === AppointmentStatus.COMPLETED;
+      } else if (filter === 'cancelled') {
+        matchesFilter = apt.status === AppointmentStatus.CANCELLED;
+      }
+
+      let matchesSearch = true;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        matchesSearch =
+          apt.patient.firstName.toLowerCase().includes(query) ||
+          apt.patient.lastName.toLowerCase().includes(query) ||
+          apt.patient.email.toLowerCase().includes(query) ||
+          apt.dietitian.firstName.toLowerCase().includes(query) ||
+          apt.dietitian.lastName.toLowerCase().includes(query) ||
+          apt.dietitian.email.toLowerCase().includes(query);
+      }
+
+      return matchesFilter && matchesSearch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.startTime);
+      const dateB = new Date(b.startTime);
+      return filter === 'past' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+    });
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getStatusColor = (status: AppointmentStatus) => {
+    switch (status) {
+      case AppointmentStatus.SCHEDULED:
+        return 'bg-blue-100 text-blue-700';
+      case AppointmentStatus.CONFIRMED:
+        return 'bg-green-100 text-green-700';
+      case AppointmentStatus.COMPLETED:
+        return 'bg-gray-100 text-gray-700';
+      case AppointmentStatus.CANCELLED:
+        return 'bg-red-100 text-red-700';
+      case AppointmentStatus.NO_SHOW:
+        return 'bg-yellow-100 text-yellow-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#facc15]" />
+      </div>
+    );
   }
-};
-
-const getTypeBadge = (type: string) => {
-  const icon = type === 'Video' ? 'videocam' : 'location_on';
-  const colorClass = type === 'Video'
-    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-    : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400';
 
   return (
-    <div className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${colorClass}`}>
-      <span className="material-icons-round text-sm">{icon}</span>
-      {type}
-    </div>
-  );
-};
-
-const getIconBgColor = (color: string) => {
-  switch (color) {
-    case 'blue':
-      return 'bg-blue-50 dark:bg-blue-900/20 text-blue-600';
-    case 'emerald':
-      return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600';
-    case 'amber':
-      return 'bg-amber-50 dark:bg-amber-900/20 text-amber-600';
-    case 'rose':
-      return 'bg-rose-50 dark:bg-rose-900/20 text-rose-600';
-    default:
-      return 'bg-slate-50 dark:bg-slate-800 text-slate-600';
-  }
-};
-
-export default function AppointmentsManagementPage() {
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
-
-  return (
-    <div className="p-4 md:p-8">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-          <button className="lg:hidden p-2 text-muted-foreground bg-card rounded-xl shadow-sm border border-border">
-            <span className="material-icons-round">menu</span>
-          </button>
-          <div>
-            <h1 className="text-2xl font-extrabold text-foreground dark:text-white">
-              Appointments Management
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Manage, reschedule or cancel patient appointments.
-            </p>
-          </div>
+    <div className="p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1e293b]">Appointment Management</h1>
+          <p className="text-slate-500">Manage all appointments across the platform</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative group hidden sm:block">
-            <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xl">
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Search patients, doctors..."
-              className="pl-10 pr-4 py-2.5 w-64 bg-card border-border rounded-xl text-sm focus:ring-primary focus:border-primary dark:text-white border"
-            />
-          </div>
-          <button className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground transition-colors relative">
-            <span className="material-icons-round">notifications_none</span>
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-card"></span>
-          </button>
-          <button className="bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2">
-            <span className="material-icons-round text-lg">add</span>
-            <span>New Appointment</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-card p-6 rounded-3xl shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-                {stat.label}
-              </span>
-              <span className={`p-2 rounded-xl ${getIconBgColor(stat.color)}`}>
-                <span className="material-icons-round">{stat.icon}</span>
-              </span>
-            </div>
-            <div className="text-3xl font-extrabold text-foreground dark:text-white mb-1">
-              {stat.value}
-            </div>
-            <div className={`text-[12px] flex items-center gap-1 font-semibold ${
-              stat.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'
-            }`}>
-              <span className="material-icons-round text-sm">
-                {stat.trend === 'up' ? 'trending_up' : 'trending_down'}
-              </span>
-              {stat.change} from last month
-            </div>
-          </div>
-        ))}
       </div>
 
-      {/* Appointments Table */}
-      <div className="bg-card rounded-3xl shadow-sm border border-border flex flex-col overflow-hidden">
-        {/* Table Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex p-1 bg-muted rounded-2xl">
-              <button
-                onClick={() => setActiveTab('upcoming')}
-                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                  activeTab === 'upcoming'
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Upcoming
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                  activeTab === 'history'
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                History
-              </button>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
-                <span className="material-icons-round text-muted-foreground text-lg">filter_list</span>
-                <span className="text-xs font-semibold text-muted-foreground">All Doctors</span>
-                <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
-                <span className="material-icons-round text-muted-foreground text-lg">event</span>
-                <span className="text-xs font-semibold text-muted-foreground">Last 30 Days</span>
-                <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
-                <span className="material-icons-round text-muted-foreground text-lg">category</span>
-                <span className="text-xs font-semibold text-muted-foreground">Status</span>
-                <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
-              </div>
-              <button className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
-                <span className="material-icons-round text-lg">file_download</span>
-                <span className="text-xs font-bold uppercase tracking-wider">Export</span>
-              </button>
-            </div>
-          </div>
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-600">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
         </div>
+      )}
 
-        {/* Table */}
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/50">
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">ID</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Patient</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Doctor</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Date & Time</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Type</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by patient or dietitian name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
+          />
+        </div>
+        <div className="flex gap-2">
+          {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filter === f
+                  ? 'bg-[#facc15] text-slate-900'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Patient</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Dietitian</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Date & Time</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Duration</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {appointments.map((appointment) => (
-                <tr
-                  key={appointment.id}
-                  className="group hover:bg-muted/30 transition-all"
-                >
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-foreground dark:text-white">
-                      {appointment.id}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full overflow-hidden bg-muted">
-                        <img
-                          src={appointment.patient.avatar}
-                          alt={appointment.patient.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-foreground dark:text-white">
-                          {appointment.patient.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{appointment.patient.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-muted">
-                        <img
-                          src={appointment.doctor.avatar}
-                          alt={appointment.doctor.name}
-                          className="w-full h-full object-cover grayscale"
-                        />
-                      </div>
-                      <p className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                        {appointment.doctor.name}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm">
-                      <p className="font-bold text-foreground dark:text-white">{appointment.date}</p>
-                      <p className="text-muted-foreground">{appointment.time}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{getTypeBadge(appointment.type)}</td>
-                  <td className="px-6 py-4">{getStatusBadge(appointment.status)}</td>
-                  <td className="px-6 py-4 text-right">
-                    {appointment.status === 'Cancelled' ? (
-                      <button className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-xs font-bold hover:bg-muted/80 transition-colors">
-                        Rebook
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                          title="Reschedule"
-                        >
-                          <span className="material-icons-round text-lg">edit_calendar</span>
-                        </button>
-                        <button
-                          className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                          title="Cancel"
-                        >
-                          <span className="material-icons-round text-lg">cancel</span>
-                        </button>
-                      </div>
-                    )}
+            <tbody className="divide-y divide-slate-200">
+              {filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    No appointments found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredAppointments.map((appointment) => (
+                  <tr key={appointment.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">
+                          {appointment.patient.firstName[0]}{appointment.patient.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {appointment.patient.firstName} {appointment.patient.lastName}
+                          </p>
+                          <p className="text-sm text-slate-500">{appointment.patient.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#facc15]/20 rounded-full flex items-center justify-center text-[#facc15] font-bold text-sm">
+                          {appointment.dietitian.firstName[0]}{appointment.dietitian.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {appointment.dietitian.firstName} {appointment.dietitian.lastName}
+                          </p>
+                          <p className="text-sm text-slate-500">{appointment.dietitian.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-slate-900">{formatDate(appointment.startTime)}</p>
+                      <p className="text-sm text-slate-500">{formatTime(appointment.startTime)}</p>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">{appointment.duration} min</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        {appointment.status === AppointmentStatus.SCHEDULED && (
+                          <>
+                            <button
+                              onClick={() => handleAppointmentAction(appointment.id, AppointmentStatus.CONFIRMED)}
+                              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                              title="Confirm"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActionType('cancel');
+                                setSelectedAppointment(appointment);
+                              }}
+                              className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                              title="Cancel"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {appointment.status === AppointmentStatus.CONFIRMED && (
+                          <button
+                            onClick={() => handleAppointmentAction(appointment.id, AppointmentStatus.COMPLETED)}
+                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                            title="Mark Complete"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        {appointment.meetingLink && (
+                          <a
+                            href={appointment.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                            title="Join Meeting"
+                          >
+                            <Video className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination */}
-        <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-bold text-foreground dark:text-white">1 to 4</span> of 156 entries
-          </p>
-          <div className="flex items-center gap-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors">
-              <span className="material-icons-round">chevron_left</span>
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold">
-              1
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
-              2
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
-              3
-            </button>
-            <span className="px-2 text-muted-foreground">...</span>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
-              16
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors">
-              <span className="material-icons-round">chevron_right</span>
-            </button>
+      {selectedAppointment && actionType === 'cancel' && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[#1e293b] mb-4">Cancel Appointment</h3>
+            <p className="text-slate-600 mb-4">
+              Are you sure you want to cancel this appointment between{' '}
+              <strong>
+                {selectedAppointment.patient.firstName} {selectedAppointment.patient.lastName}
+              </strong>{' '}
+              and{' '}
+              <strong>
+                {selectedAppointment.dietitian.firstName} {selectedAppointment.dietitian.lastName}
+              </strong>
+              ?
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Reason for cancellation
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
+                rows={3}
+                placeholder="Please provide a reason..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedAppointment(null)}
+                className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                Keep Appointment
+              </button>
+              <button
+                onClick={() => handleAppointmentAction(selectedAppointment.id, AppointmentStatus.CANCELLED, cancelReason)}
+                disabled={isProcessing}
+                className="flex-1 px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : 'Cancel Appointment'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

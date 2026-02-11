@@ -26,13 +26,13 @@
 
 ### Appointment Booking System
 - [x] Implement patient-facing features: browse dietitians, view schedules, book appointments
-- [ ] Implement dietitian-facing features: manage availability, calendar sync, appointment confirmations
+- [x] Implement dietitian-facing features: manage availability, calendar sync, appointment confirmations
 - [x] Implement timezone handling
 - [ ] Implement recurring appointments functionality
 - [x] Implement cancellation policies
 - [x] Implement real-time availability updates
 - [x] Implement automated confirmations
-- [ ] Create appointment management UI for all roles
+- [x] Create appointment management UI for all roles
 
 ### Availability Management
 - [x] Implement dietitian availability scheduling
