@@ -1,5 +1,4 @@
-import { Sidebar } from '@/components/sidebar'
-import { Header } from '@/components/dashboard-header'
+import { DashboardLayout } from '@/components/DashboardLayout'
 import {LocaleProvider} from '@/contexts/LocaleContext';
 import {AuthProvider} from '@/contexts/AuthContext';
 import type {Locale} from '@/contexts/LocaleContext';
@@ -17,14 +16,10 @@ export default async function PatientDashboardLayout({
   return (
     <LocaleProvider locale={locale}>
       <AuthProvider>
-        <div lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className="flex min-h-screen bg-background">
-          <Sidebar role="patient" />
-          <div className="flex flex-col flex-1 w-full">
-            <Header role="patient" />
-            <main className="flex-1 overflow-y-auto p-4 md:p-6">
-              {children}
-            </main>
-          </div>
+        <div lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+          <DashboardLayout role="patient">
+            {children}
+          </DashboardLayout>
         </div>
       </AuthProvider>
     </LocaleProvider>
