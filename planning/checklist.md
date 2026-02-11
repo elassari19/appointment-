@@ -47,7 +47,7 @@
 - [x] Integrate Google Calendar API for appointment scheduling (via proxy)
 - [x] Implement automated Google Meet link generation for appointments (via proxy)
 - [x] Ensure secure access to meeting links (only booked participants)
-- [x] Implement calendar synchronization for participants (via proxy)
+- [x] Implement calendar synchronization for participants
 - [ ] Handle meeting lifecycle (pre-session, active session, post-session)
 - [ ] Implement recording capabilities (with privacy compliance)
 
