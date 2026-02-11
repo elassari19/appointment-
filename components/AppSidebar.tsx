@@ -18,6 +18,7 @@ const mainNav: NavItem[] = [
   { title: "Patients", url: "/admin/patients", icon: "people_outline", roles: ["admin", "doctor"] },
   { title: "Doctors", url: "/admin/doctors", icon: "medication", roles: ["admin", "patient"] },
   { title: "Messages", url: "/admin/messages", icon: "chat_bubble_outline", roles: ["admin", "doctor", "patient"] },
+  { title: "Profile", url: "/profile", icon: "person", roles: ["admin", "doctor", "patient"] },
 ];
 
 const managementNav: NavItem[] = [

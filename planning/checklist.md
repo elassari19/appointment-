@@ -19,7 +19,7 @@
 ### User Management
 - [x] Implement user registration and login system
 - [x] Implement role-based access control (patient, dietitian, admin)
-- [ ] Implement user profile management
+- [x] Implement user profile management
 - [ ] Implement user verification system
 - [ ] Implement password reset functionality
 - [ ] Implement multi-factor authentication
