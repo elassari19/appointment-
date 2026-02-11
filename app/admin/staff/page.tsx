@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 const staff = [
   {
     id: '#ST-001',
@@ -33,6 +35,17 @@ const staff = [
     status: 'On Leave',
     joinDate: 'Jun 10, 2023',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '#ST-004',
+    name: 'John Martinez',
+    role: 'Nurse',
+    department: 'General',
+    email: 'john.m@medicare.com',
+    phone: '+1 (555) 777-8888',
+    status: 'Active',
+    joinDate: 'Aug 5, 2023',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
   },
 ];
 
@@ -74,7 +87,7 @@ export default function StaffPage() {
             <input
               type="text"
               placeholder="Search staff..."
-              className="pl-10 pr-4 py-2.5 w-64 bg-card border-border rounded-xl text-sm border"
+              className="pl-10 pr-4 py-2.5 w-64 bg-card border-border rounded-xl text-sm border focus:ring-primary focus:border-primary outline-none transition-all"
             />
           </div>
           <button className="bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2">
@@ -85,11 +98,11 @@ export default function StaffPage() {
       </header>
 
       {/* Staff Table */}
-      <div className="card-stitch flex flex-col overflow-hidden">
+      <div className="bg-card rounded-3xl shadow-sm border border-border flex flex-col overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-muted/50 dark:bg-muted/20">
+              <tr className="bg-muted/50">
                 <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">ID</th>
                 <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Name</th>
                 <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Role</th>
@@ -108,7 +121,9 @@ export default function StaffPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img src={member.avatar} alt={member.name} className="w-9 h-9 rounded-full object-cover" />
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-muted">
+                        <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                      </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">{member.name}</p>
                         <p className="text-xs text-muted-foreground">{member.email}</p>

@@ -2,6 +2,22 @@
 
 import { useState } from 'react';
 
+const tabs = [
+  { id: 'general', label: 'General', icon: 'settings' },
+  { id: 'profile', label: 'Profile', icon: 'person' },
+  { id: 'notifications', label: 'Notifications', icon: 'notifications' },
+  { id: 'security', label: 'Security', icon: 'shield' },
+  { id: 'billing', label: 'Billing', icon: 'payments' },
+];
+
+const notificationItems = [
+  { label: 'New appointment bookings', checked: true },
+  { label: 'Appointment cancellations', checked: true },
+  { label: 'Patient messages', checked: true },
+  { label: 'System updates', checked: false },
+  { label: 'Marketing emails', checked: false },
+];
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
 
@@ -22,35 +38,29 @@ export default function SettingsPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Tabs */}
         <div className="lg:w-64 space-y-1">
-          {[
-            { id: 'general', label: 'General', icon: 'settings' },
-            { id: 'profile', label: 'Profile', icon: 'person' },
-            { id: 'notifications', label: 'Notifications', icon: 'notifications' },
-            { id: 'security', label: 'Security', icon: 'shield' },
-            { id: 'billing', label: 'Billing', icon: 'payments' },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-primary/20 text-foreground'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted/50'
               }`}
             >
-              <span className="material-icons-round">{tab.icon}</span>
+              <span className={`material-icons-round ${activeTab === tab.id ? 'text-primary' : ''}`}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 card-stitch p-6">
+        <div className="flex-1 bg-card rounded-3xl shadow-sm border border-border p-6">
           {activeTab === 'general' && (
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-foreground">General Settings</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-4 max-w-2xl">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Clinic Name
@@ -58,7 +68,7 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     defaultValue="MediCare Clinic"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 
@@ -69,7 +79,7 @@ export default function SettingsPage() {
                   <input
                     type="email"
                     defaultValue="contact@medicare.com"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 
@@ -80,7 +90,7 @@ export default function SettingsPage() {
                   <input
                     type="tel"
                     defaultValue="+1 (555) 123-4567"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 
@@ -91,7 +101,7 @@ export default function SettingsPage() {
                   <textarea
                     rows={3}
                     defaultValue="123 Medical Center Drive, Suite 100, New York, NY 10001"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all resize-none"
                   />
                 </div>
               </div>
@@ -114,7 +124,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     First Name
@@ -122,7 +132,7 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     defaultValue="Dr. Mitchell"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -132,7 +142,7 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     defaultValue="Admin"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -142,7 +152,7 @@ export default function SettingsPage() {
                   <input
                     type="email"
                     defaultValue="admin@medicare.com"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -152,7 +162,7 @@ export default function SettingsPage() {
                   <input
                     type="tel"
                     defaultValue="+1 (555) 987-6543"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
               </div>
@@ -163,14 +173,8 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-foreground">Notification Preferences</h2>
               
-              <div className="space-y-4">
-                {[
-                  { label: 'New appointment bookings', checked: true },
-                  { label: 'Appointment cancellations', checked: true },
-                  { label: 'Patient messages', checked: true },
-                  { label: 'System updates', checked: false },
-                  { label: 'Marketing emails', checked: false },
-                ].map((item) => (
+              <div className="space-y-4 max-w-2xl">
+                {notificationItems.map((item) => (
                   <div key={item.label} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                     <span className="text-sm text-foreground">{item.label}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -187,7 +191,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-foreground">Security Settings</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-4 max-w-2xl">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Current Password
@@ -195,7 +199,7 @@ export default function SettingsPage() {
                   <input
                     type="password"
                     placeholder="Enter current password"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -205,7 +209,7 @@ export default function SettingsPage() {
                   <input
                     type="password"
                     placeholder="Enter new password"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -215,12 +219,12 @@ export default function SettingsPage() {
                   <input
                     type="password"
                     placeholder="Confirm new password"
-                    className="w-full px-4 py-2.5 bg-muted dark:bg-muted/20 border-border rounded-xl text-sm border"
+                    className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   />
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-border">
+              <div className="pt-4 border-t border-border max-w-2xl">
                 <h3 className="text-sm font-bold text-foreground mb-3">Two-Factor Authentication</h3>
                 <div className="flex items-center justify-between">
                   <div>
@@ -239,23 +243,25 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-foreground">Billing Information</h2>
               
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+              <div className="space-y-4 max-w-2xl">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                      <span className="material-icons-round text-primary-foreground">credit_card</span>
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                      <span className="material-icons-round text-primary">credit_card</span>
                     </div>
                     <div>
                       <p className="font-bold text-foreground">Visa ending in 4242</p>
                       <p className="text-xs text-muted-foreground">Expires 12/26</p>
                     </div>
                   </div>
-                  <button className="text-primary font-semibold text-sm">Edit</button>
+                  <button className="text-primary font-semibold text-sm hover:opacity-80 transition-opacity">
+                    Edit
+                  </button>
                 </div>
                 
                 <div className="pt-4 border-t border-border">
                   <h3 className="text-sm font-bold text-foreground mb-3">Current Plan</h3>
-                  <div className="p-4 bg-primary/10 rounded-xl">
+                  <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-bold text-foreground">Professional Plan</span>
                       <span className="text-primary font-bold">$99/month</span>
