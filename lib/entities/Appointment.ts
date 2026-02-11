@@ -17,6 +17,13 @@ export enum AppointmentStatus {
   NO_SHOW = 'no_show',
 }
 
+export enum RecurrenceFrequency {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+}
+
 @Entity('appointments')
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
@@ -25,7 +32,7 @@ export class Appointment {
   @Column({ type: 'timestamp' })
   startTime!: Date;
 
-  @Column({ type: 'integer' }) // Duration in minutes
+  @Column({ type: 'integer' })
   duration!: number;
 
   @Column({
@@ -49,6 +56,28 @@ export class Appointment {
 
   @Column({ type: 'text', nullable: true })
   cancellationReason?: string;
+
+  @Column({ type: 'boolean', default: false })
+  isRecurring!: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: RecurrenceFrequency,
+    nullable: true,
+  })
+  recurrenceFrequency?: RecurrenceFrequency;
+
+  @Column({ type: 'integer', nullable: true })
+  recurrenceCount?: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  recurrenceEndDate?: Date;
+
+  @Column({ type: 'uuid', nullable: true })
+  recurringSeriesId?: string;
+
+  @Column({ type: 'integer', default: 1 })
+  recurrencePosition!: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;

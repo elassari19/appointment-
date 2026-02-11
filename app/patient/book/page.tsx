@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar, Clock, User, Star, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Search, Calendar, Clock, User, Star, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Loader2, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale } from '@/contexts/LocaleContext';
+import { RecurrenceFrequency } from '@/lib/entities/Appointment';
 
 interface Dietitian {
   id: string;
@@ -36,6 +37,9 @@ export default function BookAppointmentPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>(RecurrenceFrequency.WEEKLY);
+  const [recurrenceCount, setRecurrenceCount] = useState(4);
 
   useEffect(() => {
     fetchDietitians();
@@ -100,22 +104,45 @@ export default function BookAppointmentPage() {
 
     try {
       const startTime = new Date(selectedSlot.start);
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          dietitianId: selectedDietitian.id,
-          startTime: startTime.toISOString(),
-          duration: 60,
-          notes,
-        }),
-      });
+      
+      if (isRecurring) {
+        const response = await fetch('/api/appointments/recurring', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dietitianId: selectedDietitian.id,
+            startTime: startTime.toISOString(),
+            duration: 60,
+            notes,
+            recurrenceFrequency,
+            recurrenceCount,
+          }),
+        });
 
-      if (response.ok) {
-        setStep(4);
+        if (response.ok) {
+          setStep(4);
+        } else {
+          const data = await response.json();
+          setError(data.error || 'Failed to book recurring appointments');
+        }
       } else {
-        const data = await response.json();
-        setError(data.error || 'Failed to book appointment');
+        const response = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dietitianId: selectedDietitian.id,
+            startTime: startTime.toISOString(),
+            duration: 60,
+            notes,
+          }),
+        });
+
+        if (response.ok) {
+          setStep(4);
+        } else {
+          const data = await response.json();
+          setError(data.error || 'Failed to book appointment');
+        }
       }
     } catch (err) {
       setError('An error occurred while booking');
@@ -352,6 +379,59 @@ export default function BookAppointmentPage() {
                   rows={4}
                 />
               </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isRecurring}
+                    onChange={(e) => setIsRecurring(e.target.checked)}
+                    className="w-5 h-5 rounded border-slate-300 text-[#facc15] focus:ring-[#facc15]"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Repeat className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-blue-700">Make this a recurring appointment</span>
+                  </div>
+                </label>
+
+                {isRecurring && (
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Repeat every
+                      </label>
+                      <select
+                        value={recurrenceFrequency}
+                        onChange={(e) => setRecurrenceFrequency(e.target.value as RecurrenceFrequency)}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
+                      >
+                        <option value={RecurrenceFrequency.DAILY}>Day</option>
+                        <option value={RecurrenceFrequency.WEEKLY}>Week</option>
+                        <option value={RecurrenceFrequency.BIWEEKLY}>2 Weeks</option>
+                        <option value={RecurrenceFrequency.MONTHLY}>Month</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Number of appointments
+                      </label>
+                      <select
+                        value={recurrenceCount}
+                        onChange={(e) => setRecurrenceCount(parseInt(e.target.value))}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
+                      >
+                        <option value={2}>2 appointments</option>
+                        <option value={4}>4 appointments</option>
+                        <option value={8}>8 appointments</option>
+                        <option value={12}>12 appointments</option>
+                        <option value={26}>26 appointments (6 months)</option>
+                        <option value={52}>52 appointments (1 year)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
@@ -374,9 +454,13 @@ export default function BookAppointmentPage() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-500" />
           </div>
-          <h2 className="text-xl font-semibold text-[#1e293b] mb-2">Appointment Booked!</h2>
+          <h2 className="text-xl font-semibold text-[#1e293b] mb-2">
+            {isRecurring ? 'Recurring Appointments Booked!' : 'Appointment Booked!'}
+          </h2>
           <p className="text-slate-600 mb-6">
-            Your appointment has been successfully scheduled. You will receive a confirmation email shortly.
+            {isRecurring
+              ? `Your ${recurrenceCount} recurring appointments have been successfully scheduled. You will receive confirmation emails for each session.`
+              : 'Your appointment has been successfully scheduled. You will receive a confirmation email shortly.'}
           </p>
           <div className="flex justify-center gap-4">
             <button
