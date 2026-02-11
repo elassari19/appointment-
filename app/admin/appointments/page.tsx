@@ -1,79 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-
-// Mock appointment data
-const appointments = [
-  {
-    id: '#AP-2931',
-    patient: {
-      name: 'Sarah Jenkins',
-      email: 'sarahj@example.com',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
-    },
-    doctor: {
-      name: 'Dr. Sarah Mitchell',
-      avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face',
-    },
-    date: 'Feb 15, 2026',
-    time: '10:00 AM',
-    type: 'Video',
-    status: 'Confirmed',
-  },
-  {
-    id: '#AP-2932',
-    patient: {
-      name: 'Michael Roberts',
-      email: 'm.roberts@email.com',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    },
-    doctor: {
-      name: 'Dr. James Wilson',
-      avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face',
-    },
-    date: 'Feb 15, 2026',
-    time: '11:30 AM',
-    type: 'In-Person',
-    status: 'Pending',
-  },
-  {
-    id: '#AP-2933',
-    patient: {
-      name: 'Emily Davis',
-      email: 'emily.d@test.com',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    },
-    doctor: {
-      name: 'Dr. Alex Carter',
-      avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face',
-    },
-    date: 'Feb 15, 2026',
-    time: '02:00 PM',
-    type: 'Video',
-    status: 'Cancelled',
-  },
-  {
-    id: '#AP-2934',
-    patient: {
-      name: 'David Kim',
-      email: 'dkim88@work.com',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-    },
-    doctor: {
-      name: 'Dr. Sarah Mitchell',
-      avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face',
-    },
-    date: 'Feb 16, 2026',
-    time: '09:15 AM',
-    type: 'In-Person',
-    status: 'Confirmed',
-  },
-];
 
 const stats = [
   {
-    title: 'Total Booking',
+    label: 'Total Booking',
     value: '1,482',
     change: '+12%',
     trend: 'up',
@@ -81,7 +12,7 @@ const stats = [
     color: 'blue',
   },
   {
-    title: 'Confirmed',
+    label: 'Confirmed',
     value: '948',
     change: '+5%',
     trend: 'up',
@@ -89,7 +20,7 @@ const stats = [
     color: 'emerald',
   },
   {
-    title: 'Pending',
+    label: 'Pending',
     value: '156',
     change: '-2%',
     trend: 'down',
@@ -97,12 +28,51 @@ const stats = [
     color: 'amber',
   },
   {
-    title: 'Cancelled',
+    label: 'Cancelled',
     value: '24',
     change: '-10%',
     trend: 'down',
     icon: 'cancel_presentation',
     color: 'rose',
+  },
+];
+
+const appointments = [
+  {
+    id: '#AP-2931',
+    patient: { name: 'Sarah Jenkins', email: 'sarahj@example.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face' },
+    doctor: { name: 'Dr. Sarah Mitchell', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
+    date: 'Feb 15, 2026',
+    time: '10:00 AM',
+    type: 'Video',
+    status: 'Confirmed',
+  },
+  {
+    id: '#AP-2932',
+    patient: { name: 'Michael Roberts', email: 'm.roberts@email.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' },
+    doctor: { name: 'Dr. James Wilson', avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face' },
+    date: 'Feb 15, 2026',
+    time: '11:30 AM',
+    type: 'In-Person',
+    status: 'Pending',
+  },
+  {
+    id: '#AP-2933',
+    patient: { name: 'Emily Davis', email: 'emily.d@test.com', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face' },
+    doctor: { name: 'Dr. Alex Carter', avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face' },
+    date: 'Feb 15, 2026',
+    time: '02:00 PM',
+    type: 'Video',
+    status: 'Cancelled',
+  },
+  {
+    id: '#AP-2934',
+    patient: { name: 'David Kim', email: 'dkim88@work.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' },
+    doctor: { name: 'Dr. Sarah Mitchell', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
+    date: 'Feb 16, 2026',
+    time: '09:15 AM',
+    type: 'In-Person',
+    status: 'Confirmed',
   },
 ];
 
@@ -136,16 +106,31 @@ const getStatusBadge = (status: string) => {
 
 const getTypeBadge = (type: string) => {
   const icon = type === 'Video' ? 'videocam' : 'location_on';
-  const colorClass = type === 'Video' 
-    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' 
+  const colorClass = type === 'Video'
+    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
     : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400';
-  
+
   return (
     <div className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${colorClass}`}>
       <span className="material-icons-round text-sm">{icon}</span>
       {type}
     </div>
   );
+};
+
+const getIconBgColor = (color: string) => {
+  switch (color) {
+    case 'blue':
+      return 'bg-blue-50 dark:bg-blue-900/20 text-blue-600';
+    case 'emerald':
+      return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600';
+    case 'amber':
+      return 'bg-amber-50 dark:bg-amber-900/20 text-amber-600';
+    case 'rose':
+      return 'bg-rose-50 dark:bg-rose-900/20 text-rose-600';
+    default:
+      return 'bg-slate-50 dark:bg-slate-800 text-slate-600';
+  }
 };
 
 export default function AppointmentsManagementPage() {
@@ -193,17 +178,12 @@ export default function AppointmentsManagementPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
-          <div key={stat.title} className="stat-card">
+          <div key={stat.label} className="bg-card p-6 rounded-3xl shadow-sm border border-border">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-                {stat.title}
+                {stat.label}
               </span>
-              <span className={`p-2 ${
-                stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
-                stat.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' :
-                stat.color === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' :
-                'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-              } rounded-xl`}>
+              <span className={`p-2 rounded-xl ${getIconBgColor(stat.color)}`}>
                 <span className="material-icons-round">{stat.icon}</span>
               </span>
             </div>
@@ -223,16 +203,16 @@ export default function AppointmentsManagementPage() {
       </div>
 
       {/* Appointments Table */}
-      <div className="card-stitch flex flex-col overflow-hidden">
+      <div className="bg-card rounded-3xl shadow-sm border border-border flex flex-col overflow-hidden">
         {/* Table Header */}
         <div className="p-6 border-b border-border">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex p-1 bg-muted dark:bg-muted/20 rounded-2xl">
+            <div className="flex p-1 bg-muted rounded-2xl">
               <button
                 onClick={() => setActiveTab('upcoming')}
                 className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                   activeTab === 'upcoming'
-                    ? 'bg-card dark:bg-muted text-foreground dark:text-white shadow-sm'
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -242,7 +222,7 @@ export default function AppointmentsManagementPage() {
                 onClick={() => setActiveTab('history')}
                 className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                   activeTab === 'history'
-                    ? 'bg-card dark:bg-muted text-foreground dark:text-white shadow-sm'
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -250,17 +230,17 @@ export default function AppointmentsManagementPage() {
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted dark:bg-muted/20 rounded-xl border border-border cursor-pointer">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
                 <span className="material-icons-round text-muted-foreground text-lg">filter_list</span>
                 <span className="text-xs font-semibold text-muted-foreground">All Doctors</span>
                 <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted dark:bg-muted/20 rounded-xl border border-border cursor-pointer">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
                 <span className="material-icons-round text-muted-foreground text-lg">event</span>
                 <span className="text-xs font-semibold text-muted-foreground">Last 30 Days</span>
                 <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted dark:bg-muted/20 rounded-xl border border-border cursor-pointer">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border cursor-pointer">
                 <span className="material-icons-round text-muted-foreground text-lg">category</span>
                 <span className="text-xs font-semibold text-muted-foreground">Status</span>
                 <span className="material-icons-round text-muted-foreground text-sm">expand_more</span>
@@ -277,35 +257,21 @@ export default function AppointmentsManagementPage() {
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-muted/50 dark:bg-muted/20">
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  ID
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Patient
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Doctor
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Date & Time
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Type
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">
-                  Actions
-                </th>
+              <tr className="bg-muted/50">
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">ID</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Patient</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Doctor</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Date & Time</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Type</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {appointments.map((appointment) => (
                 <tr
                   key={appointment.id}
-                  className="group hover:bg-muted/30 dark:hover:bg-muted/10 transition-all"
+                  className="group hover:bg-muted/30 transition-all"
                 >
                   <td className="px-6 py-4">
                     <span className="text-sm font-bold text-foreground dark:text-white">
@@ -353,7 +319,7 @@ export default function AppointmentsManagementPage() {
                   <td className="px-6 py-4">{getStatusBadge(appointment.status)}</td>
                   <td className="px-6 py-4 text-right">
                     {appointment.status === 'Cancelled' ? (
-                      <button className="px-3 py-1.5 bg-muted dark:bg-muted/30 text-muted-foreground rounded-lg text-xs font-bold hover:bg-muted/80 transition-colors">
+                      <button className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-xs font-bold hover:bg-muted/80 transition-colors">
                         Rebook
                       </button>
                     ) : (
@@ -391,14 +357,14 @@ export default function AppointmentsManagementPage() {
             <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold">
               1
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted dark:hover:bg-muted/20 font-bold transition-colors">
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
               2
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted dark:hover:bg-muted/20 font-bold transition-colors">
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
               3
             </button>
             <span className="px-2 text-muted-foreground">...</span>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted dark:hover:bg-muted/20 font-bold transition-colors">
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors">
               16
             </button>
             <button className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors">
