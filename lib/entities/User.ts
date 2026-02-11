@@ -56,6 +56,12 @@ export class User {
   @Column({ type: 'boolean', default: false })
   isVerified!: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  resetPasswordToken?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetPasswordExpiresAt?: Date;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 

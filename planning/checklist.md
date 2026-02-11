@@ -20,9 +20,9 @@
 - [x] Implement user registration and login system
 - [x] Implement role-based access control (patient, dietitian, admin)
 - [x] Implement user profile management
-- [ ] Implement user verification system
-- [ ] Implement password reset functionality
-- [ ] Implement multi-factor authentication
+ - [ ] Implement user verification system
+ - [x] Implement password reset functionality
+ - [ ] Implement multi-factor authentication
 
 ### Appointment Booking System
 - [ ] Implement patient-facing features: browse dietitians, view schedules, book appointments

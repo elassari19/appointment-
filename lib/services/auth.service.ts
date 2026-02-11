@@ -164,4 +164,84 @@ export class AuthService {
 
     return { isValid: true, user };
   }
+
+  async generatePasswordResetToken(email: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({
+      where: { email, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = expiresAt;
+
+    await this.userRepository.save(user);
+
+    return resetToken;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: {
+        resetPasswordToken: token,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      return false;
+    }
+
+    if (!user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
+      return false;
+    }
+
+    const saltRounds = 10;
+    user.password = await bcrypt.hash(newPassword, saltRounds);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+
+    await this.userRepository.save(user);
+
+    await this.sessionRepository.update(
+      { userId: user.id, isActive: true },
+      { isActive: false }
+    );
+
+    return true;
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, isActive: true },
+      select: ['id', 'password'],
+    });
+
+    if (!user || !user.password) {
+      return false;
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isPasswordValid) {
+      return false;
+    }
+
+    const saltRounds = 10;
+    user.password = await bcrypt.hash(newPassword, saltRounds);
+
+    await this.userRepository.save(user);
+
+    await this.sessionRepository.update(
+      { userId: user.id, isActive: true },
+      { isActive: false }
+    );
+
+    return true;
+  }
 }
