@@ -1,224 +1,267 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, FileText, Apple, Activity, MoreHorizontal, TrendingUp, Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
+'use client';
+
+import {
+  DashboardHeader,
+  StatCard,
+  QuickActionCard,
+  AppointmentCard,
+  MedicationSchedule,
+  WeeklyProgress,
+  DataTable,
+  Section,
+} from '@/components/dashboard';
+
+// Mock data
+const statsData = [
+  {
+    label: 'Upcoming',
+    value: '1 Visit',
+    subtext: 'Tomorrow, 10:00 AM',
+    icon: 'calendar_month',
+    variant: 'default' as const,
+  },
+  {
+    label: 'Total Reports',
+    value: '12',
+    subtext: '+2 new this month',
+    icon: 'folder_open',
+    variant: 'default' as const,
+  },
+  {
+    label: 'Health Score',
+    value: '92%',
+    subtext: '+3% vs last month',
+    icon: 'favorite',
+    variant: 'success' as const,
+  },
+];
+
+const medicalHistoryData = [
+  {
+    date: 'Oct 24, 2023',
+    time: '09:30 AM',
+    doctor: 'Dr. James Anderson',
+    specialty: 'General Physician',
+    type: 'In-Person',
+    status: 'Completed',
+    hasReport: true,
+    hasLab: true,
+    initials: 'JA',
+  },
+  {
+    date: 'Sep 12, 2023',
+    time: '02:15 PM',
+    doctor: 'Dr. Emily White',
+    specialty: 'Dermatologist',
+    type: 'Video Call',
+    status: 'Completed',
+    hasReport: true,
+    hasLab: false,
+    initials: 'EW',
+  },
+];
+
+const medicationsData = [
+  { name: 'Vitamin D3', dosage: 'After breakfast • 1 Tablet', time: '08:00 AM', taken: true },
+  { name: 'Omega-3 Fish Oil', dosage: 'With lunch • 2 Softgels', time: '01:00 PM', taken: true },
+  { name: 'Metformin', dosage: 'After dinner • 1 Tablet', time: '08:00 PM', taken: false },
+];
+
+const weeklyProgressData = [
+  { day: 'M', height: '65%' },
+  { day: 'T', height: '45%' },
+  { day: 'W', height: '80%' },
+  { day: 'T', height: '90%', isToday: true },
+  { day: 'F', height: '30%' },
+  { day: 'S', height: '15%' },
+  { day: 'S', height: '40%' },
+];
+
+const weeklyStatsData = [
+  { label: 'Steps Avg.', value: '8,432' },
+  { label: 'Active Min.', value: '42m' },
+];
 
 export default function PatientDashboardPage() {
-  const stats = [
+  // Medical History Table Columns
+  const medicalHistoryColumns = [
     {
-      title: "Upcoming Appointments",
-      value: "2",
-      description: "This week",
-      icon: Calendar,
-      trend: "Scheduled",
-      trendUp: true,
+      key: 'date',
+      title: 'Date',
+      sortable: true,
+      render: (row: typeof medicalHistoryData[0]) => (
+        <>
+          <p className="font-semibold text-foreground">{row.date}</p>
+          <p className="text-xs text-muted-foreground">{row.time}</p>
+        </>
+      ),
     },
     {
-      title: "Health Score",
-      value: "85",
-      description: "Out of 100",
-      icon: Activity,
-      trend: "+5",
-      trendUp: true,
+      key: 'doctor',
+      title: 'Doctor',
+      sortable: true,
+      render: (row: typeof medicalHistoryData[0]) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+            {row.initials}
+          </div>
+          <div>
+            <p className="font-medium text-foreground">{row.doctor}</p>
+            <p className="text-xs text-muted-foreground">{row.specialty}</p>
+          </div>
+        </div>
+      ),
     },
     {
-      title: "Meal Plans",
-      value: "3",
-      description: "Active plans",
-      icon: Apple,
-      trend: "Updated",
-      trendUp: true,
+      key: 'type',
+      title: 'Type',
+      render: (row: typeof medicalHistoryData[0]) => (
+        <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
+          {row.type}
+        </span>
+      ),
     },
     {
-      title: "Progress",
-      value: "12%",
-      description: "Goal achieved",
-      icon: TrendingUp,
-      trend: "On track",
-      trendUp: true,
+      key: 'status',
+      title: 'Status',
+      render: (row: typeof medicalHistoryData[0]) => (
+        <div className="flex items-center gap-1.5 text-emerald-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span className="text-xs font-bold">{row.status}</span>
+        </div>
+      ),
     },
-  ]
+    {
+      key: 'documents',
+      title: 'Documents',
+      align: 'right' as const,
+      render: (row: typeof medicalHistoryData[0]) => (
+        <div className="flex justify-end gap-2">
+          {row.hasReport && (
+            <button
+              className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-all"
+              title="View Prescription"
+            >
+              <span className="material-icons-round text-lg">description</span>
+            </button>
+          )}
+          {row.hasLab && (
+            <button
+              className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-all"
+              title="View Lab Report"
+            >
+              <span className="material-icons-round text-lg">biotech</span>
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
-  const upcomingAppointments = [
-    { 
-      dietitian: "Dr. Sarah Johnson", 
-      date: "Tomorrow, 2:00 PM", 
-      type: "Follow-up",
-      status: "Confirmed"
-    },
-    { 
-      dietitian: "Dr. Michael Chen", 
-      date: "Friday, 10:00 AM", 
-      type: "Initial Consultation",
-      status: "Pending"
-    },
-  ]
+  const handleJoinMeeting = () => {
+    console.log('Joining meeting...');
+  };
 
-  const recentUpdates = [
-    { title: "New meal plan available", time: "2 hours ago", type: "plan" },
-    { title: "Lab results uploaded", time: "1 day ago", type: "document" },
-    { title: "Reminder: Take supplements", time: "2 days ago", type: "reminder" },
-  ]
+  const handleReschedule = () => {
+    console.log('Rescheduling appointment...');
+  };
+
+  const handleBookNewVisit = () => {
+    console.log('Booking new visit...');
+  };
+
+  const handleViewAllHistory = () => {
+    console.log('Viewing all history...');
+  };
+
+  const handleViewFullSchedule = () => {
+    console.log('Viewing full schedule...');
+  };
+
+  const handleRowClick = (row: typeof medicalHistoryData[0]) => {
+    console.log('Clicked row:', row);
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Track your health journey and appointments</p>
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Bell className="h-4 w-4" />
-          Notifications
-        </Button>
-      </div>
+      <DashboardHeader
+        title="Welcome back, Alex Mitchell"
+        subtitle="Everything looks great today. You have 1 appointment scheduled."
+        notificationCount={1}
+        userInitials="A"
+      />
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="relative overflow-hidden border-0 shadow-sm bg-white">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <stat.icon className="h-4 w-4 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline gap-2">
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <span className={`text-xs font-medium ${stat.trendUp ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {stat.trend}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statsData.map((stat, idx) => (
+          <StatCard
+            key={idx}
+            label={stat.label}
+            value={stat.value}
+            subtext={stat.subtext}
+            icon={stat.icon}
+            variant={stat.variant}
+          />
         ))}
+        <QuickActionCard
+          title="Book New Visit"
+          subtitle="Quick Action"
+          actionLabel="BOOK NOW"
+          icon="add_circle"
+          onClick={handleBookNewVisit}
+        />
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Upcoming Appointments */}
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg font-semibold">Upcoming Appointments</CardTitle>
-              <p className="text-sm text-muted-foreground">Your scheduled sessions</p>
-            </div>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingAppointments.map((apt, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{apt.dietitian}</p>
-                      <p className="text-xs text-muted-foreground">{apt.type}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{apt.date}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      apt.status === 'Confirmed' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {apt.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Next Appointment */}
+          <Section title="Next Appointment">
+            <AppointmentCard
+              specialty="Cardiologist"
+              date="Tomorrow at 10:00 AM"
+              doctorName="Dr. Sarah Mitchell"
+              doctorInitials="SM"
+              description="Routine check-up to review your cardiovascular health and discuss recent laboratory results."
+              type="Video Call"
+              duration="30 Minutes"
+              onJoin={handleJoinMeeting}
+              onReschedule={handleReschedule}
+            />
+          </Section>
 
-        {/* Recent Updates */}
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg font-semibold">Recent Updates</CardTitle>
-              <p className="text-sm text-muted-foreground">Latest from your care team</p>
-            </div>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentUpdates.map((update, index) => (
-                <div key={index} className="flex items-center gap-4 py-3 border-b last:border-0">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                    update.type === 'plan' ? 'bg-emerald-100 text-emerald-600' :
-                    update.type === 'document' ? 'bg-blue-100 text-blue-600' :
-                    'bg-amber-100 text-amber-600'
-                  }`}>
-                    {update.type === 'plan' ? <Apple className="h-5 w-5" /> :
-                     update.type === 'document' ? <FileText className="h-5 w-5" /> :
-                     <Bell className="h-5 w-5" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{update.title}</p>
-                    <p className="text-xs text-muted-foreground">{update.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Medical History */}
+          <Section title="Medical History" actionLabel="View All" onAction={handleViewAllHistory}>
+            <DataTable
+              columns={medicalHistoryColumns}
+              data={medicalHistoryData}
+              onRowClick={handleRowClick}
+              sortable={true}
+            />
+          </Section>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10 cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Book Appointment</h3>
-                <p className="text-sm text-muted-foreground">Schedule a new session</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Medication Schedule */}
+          <Section title="Medication Schedule">
+            <MedicationSchedule
+              date="Today, Oct 25"
+              completedCount={3}
+              totalCount={5}
+              medications={medicationsData}
+              onViewAll={handleViewFullSchedule}
+            />
+          </Section>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <FileText className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold">View Records</h3>
-                <p className="text-sm text-muted-foreground">Access your health data</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-500/5 to-blue-500/10 cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <Apple className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Meal Plans</h3>
-                <p className="text-sm text-muted-foreground">View nutrition plans</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Weekly Progress */}
+          <Section title="Weekly Progress">
+            <WeeklyProgress days={weeklyProgressData} stats={weeklyStatsData} />
+          </Section>
+        </div>
       </div>
     </div>
-  )
+  );
 }
