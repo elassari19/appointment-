@@ -15,6 +15,7 @@ type UserRole = "admin" | "doctor" | "patient";
 const mainNav: NavItem[] = [
   { title: "Dashboard", url: "/admin", icon: "grid_view", roles: ["admin", "doctor", "patient"] },
   { title: "Appointments", url: "/admin/appointments", icon: "calendar_today", roles: ["admin", "doctor", "patient"] },
+  { title: "Book Appointment", url: "/patient/book", icon: "add_circle", roles: ["patient"] },
   { title: "Patients", url: "/admin/patients", icon: "people_outline", roles: ["admin", "doctor"] },
   { title: "Doctors", url: "/admin/doctors", icon: "medication", roles: ["admin", "patient"] },
   { title: "Messages", url: "/admin/messages", icon: "chat_bubble_outline", roles: ["admin", "doctor", "patient"] },

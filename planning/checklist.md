@@ -25,21 +25,21 @@
 - [ ] Implement multi-factor authentication
 
 ### Appointment Booking System
-- [ ] Implement patient-facing features: browse dietitians, view schedules, book appointments
+- [x] Implement patient-facing features: browse dietitians, view schedules, book appointments
 - [ ] Implement dietitian-facing features: manage availability, calendar sync, appointment confirmations
-- [ ] Implement timezone handling
+- [x] Implement timezone handling
 - [ ] Implement recurring appointments functionality
-- [ ] Implement cancellation policies
-- [ ] Implement real-time availability updates
-- [ ] Implement automated confirmations
+- [x] Implement cancellation policies
+- [x] Implement real-time availability updates
+- [x] Implement automated confirmations
 - [ ] Create appointment management UI for all roles
 
 ### Availability Management
 - [ ] Implement dietitian availability scheduling
 - [ ] Create availability calendar UI
 - [ ] Implement bulk availability updates
-- [ ] Implement time slot blocking and exceptions
-- [ ] Create availability conflict detection
+- [ ] Implement time slot blocking [ ] and exceptions
+- Create availability conflict detection
 
 ## Phase 3: Integrations
 
