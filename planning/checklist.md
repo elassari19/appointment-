@@ -37,8 +37,8 @@
 ### Availability Management
 - [x] Implement dietitian availability scheduling
 - [x] Create availability calendar UI
-- [ ] Implement bulk availability updates
-- [ ] Implement time slot blocking and exceptions
+- [x] Implement bulk availability updates
+- [x] Implement time slot blocking and exceptions
 - [x] Create availability conflict detection
 
 ## Phase 3: Integrations

@@ -1,6 +1,7 @@
 import { AppDataSource } from '@/lib/database';
 import { User } from '@/lib/entities/User';
 import { Availability, DayOfWeek } from '@/lib/entities/Availability';
+import { BlockedSlot } from '@/lib/entities/BlockedSlot';
 
 export interface AvailabilityData {
   dayOfWeek: DayOfWeek;
@@ -10,8 +11,7 @@ export interface AvailabilityData {
   defaultDuration?: number;
 }
 
-export interface BlockedSlot {
-  id?: string;
+export interface BlockedSlotData {
   date: Date;
   startTime: string;
   endTime: string;
@@ -21,6 +21,10 @@ export interface BlockedSlot {
 export class AvailabilityService {
   private get availabilityRepository() {
     return AppDataSource.getRepository(Availability);
+  }
+
+  private get blockedSlotRepository() {
+    return AppDataSource.getRepository(BlockedSlot);
   }
 
   async getDietitianAvailability(dietitianId: string): Promise<Availability[]> {
@@ -56,6 +60,30 @@ export class AvailabilityService {
 
         newAvailabilities.push(await this.availabilityRepository.save(availability));
       }
+    }
+
+    return newAvailabilities;
+  }
+
+  async bulkUpdateAvailability(
+    dietitianId: string,
+    days: DayOfWeek[],
+    startTime: string,
+    endTime: string,
+    defaultDuration: number = 60
+  ): Promise<Availability[]> {
+    const newAvailabilities: Availability[] = [];
+
+    for (const day of days) {
+      const availability = new Availability();
+      availability.dietitian = { id: dietitianId } as User;
+      availability.dayOfWeek = day;
+      availability.startTime = startTime;
+      availability.endTime = endTime;
+      availability.isAvailable = true;
+      availability.defaultDuration = defaultDuration;
+
+      newAvailabilities.push(await this.availabilityRepository.save(availability));
     }
 
     return newAvailabilities;
@@ -118,5 +146,84 @@ export class AvailabilityService {
     }
 
     return schedule;
+  }
+
+  async addBlockedSlot(
+    dietitianId: string,
+    data: BlockedSlotData
+  ): Promise<BlockedSlot> {
+    const blockedSlot = new BlockedSlot();
+    blockedSlot.dietitianId = dietitianId;
+    blockedSlot.date = data.date;
+    blockedSlot.startTime = data.startTime;
+    blockedSlot.endTime = data.endTime;
+    blockedSlot.reason = data.reason;
+
+    return await this.blockedSlotRepository.save(blockedSlot);
+  }
+
+  async getBlockedSlots(
+    dietitianId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<BlockedSlot[]> {
+    const queryBuilder = this.blockedSlotRepository
+      .createQueryBuilder('blockedSlot')
+      .where('blockedSlot.dietitian_id = :dietitianId', { dietitianId });
+
+    if (startDate) {
+      queryBuilder.andWhere('blockedSlot.date >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere('blockedSlot.date <= :endDate', { endDate });
+    }
+
+    queryBuilder.orderBy('blockedSlot.date', 'ASC').addOrderBy('blockedSlot.startTime', 'ASC');
+
+    return await queryBuilder.getMany();
+  }
+
+  async deleteBlockedSlot(blockedSlotId: string): Promise<boolean> {
+    const blockedSlot = await this.blockedSlotRepository.findOne({
+      where: { id: blockedSlotId },
+    });
+
+    if (!blockedSlot) {
+      return false;
+    }
+
+    await this.blockedSlotRepository.remove(blockedSlot);
+    return true;
+  }
+
+  async isSlotBlocked(
+    dietitianId: string,
+    date: Date,
+    time: string
+  ): Promise<boolean> {
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const blockedSlot = await this.blockedSlotRepository
+      .createQueryBuilder('blockedSlot')
+      .where('blockedSlot.dietitian_id = :dietitianId', { dietitianId })
+      .andWhere('blockedSlot.date = :date', { date: dateStr })
+      .andWhere('blockedSlot.start_time <= :time', { time })
+      .andWhere('blockedSlot.end_time > :time', { time })
+      .getOne();
+
+    return !!blockedSlot;
+  }
+
+  async getBlockedSlotsForDate(dietitianId: string, date: Date): Promise<BlockedSlot[]> {
+    const dateStr = date.toISOString().split('T')[0];
+    
+    return await this.blockedSlotRepository.find({
+      where: {
+        dietitianId,
+        date: dateStr as any,
+      },
+      order: { startTime: 'ASC' },
+    });
   }
 }
