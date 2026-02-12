@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { AuthService, LoginCredentials } from '@/lib/services/auth.service';
 import { DatabaseService } from '@/lib/services/database.service';
 import { z } from 'zod';
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     
     const validationResult = loginSchema.safeParse(body);
     if (!validationResult.success) {
-      return Response.json(
+      return NextResponse.json(
         { error: validationResult.error.errors[0].message },
         { status: 400 }
       );
@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
     const result = await authService.login({ email, password });
 
     if (!result) {
-      return Response.json(
+      return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    return Response.json({
+    const response = NextResponse.json({
       user: {
         id: result.user.id,
         firstName: result.user.firstName,
@@ -49,9 +49,18 @@ export async function POST(request: NextRequest) {
         expiresAt: result.session.expiresAt,
       },
     });
+
+    response.cookies.set('session_token', result.session.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );

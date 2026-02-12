@@ -261,6 +261,13 @@ const translations: Record<Locale, Record<string, string>> = {
     'availability.friday': 'Friday',
     'availability.saturday': 'Saturday',
     'availability.sunday': 'Sunday',
+    'messages': 'Messages',
+    'messages.newConversation': 'New Conversation',
+    'messages.typeMessage': 'Type a message...',
+    'messages.send': 'Send',
+    'messages.noConversations': 'No conversations yet',
+    'messages.selectConversation': 'Select a conversation to start messaging',
+    'messages.encryptionNotice': 'Messages are encrypted for your privacy',
   },
   ar: {
     'nav.home': 'الرئيسية',
@@ -510,7 +517,14 @@ const translations: Record<Locale, Record<string, string>> = {
     'availability.thursday': 'الخميس',
     'availability.friday': 'الجمعة',
     'availability.saturday': 'السبت',
-    'availability.sunday': 'الأحد',
+'availability.sunday': 'الأحد',
+    'messages': 'الرسائل',
+    'messages.newConversation': 'محادثة جديدة',
+    'messages.typeMessage': 'اكتب رسالة...',
+    'messages.send': 'إرسال',
+    'messages.noConversations': 'لا توجد محادثات بعد',
+    'messages.selectConversation': 'اختر محادثة لبدء المراسلة',
+    'messages.encryptionNotice': 'الرسائل مشفرة لضمان خصوصيتك',
   }
 };
 

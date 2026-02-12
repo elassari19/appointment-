@@ -72,10 +72,10 @@
 ## Phase 4: Advanced Features
 
 ### Real-time Chat System
-- [ ] Implement encrypted communication between patients and dietitians
-- [ ] Set up persistent message storage with retention policies
-- [ ] Implement read receipts and message delivery confirmation
-- [ ] Implement role-based permissions for message access
+- [x] Implement encrypted communication between patients and dietitians
+- [x] Set up persistent message storage with retention policies
+- [x] Implement read receipts and message delivery confirmation
+- [x] Implement role-based permissions for message access
 - [ ] Add content filtering and reporting mechanisms
 
 ### Administrative Dashboard
