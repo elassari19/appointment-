@@ -46,10 +46,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const doctorId = searchParams.get('doctorId');
+    let doctorId = searchParams.get('doctorId');
 
+    // If no doctorId is provided, use the authenticated user's ID
     if (!doctorId) {
-      return Response.json({ error: 'doctorId is required' }, { status: 400 });
+      doctorId = userResult.userId;
     }
 
     const availability = await availabilityService.getDoctorAvailability(doctorId);

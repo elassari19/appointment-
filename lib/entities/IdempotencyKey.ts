@@ -14,9 +14,9 @@ export class IdempotencyKey {
   @Column({ type: 'text' })
   response!: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }

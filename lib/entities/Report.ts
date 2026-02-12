@@ -88,10 +88,10 @@ export class Report {
   @Column({ nullable: true, type: 'text' })
   moderationNotes?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 
   @Column({ nullable: true })
