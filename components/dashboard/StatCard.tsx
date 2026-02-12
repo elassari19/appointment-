@@ -1,5 +1,7 @@
 'use client';
 
+import { useLocale } from '@/contexts/LocaleContext';
+
 interface StatCardProps {
   label: string;
   value: string;
@@ -15,6 +17,8 @@ export function StatCard({
   icon,
   variant = 'default',
 }: StatCardProps) {
+  const { t } = useLocale();
+  
   const variantStyles = {
     default: {
       card: 'stat-card flex items-center justify-between',
@@ -49,7 +53,7 @@ export function StatCard({
       {variant === 'primary' ? (
         <>
           <div className="relative z-10">
-            <p className="text-sm font-semibold opacity-80 mb-1">{label}</p>
+            <p className="text-sm font-semibold opacity-80 mb-1">{t(label)}</p>
             <h3 className="text-xl font-bold mb-2">{value}</h3>
             {subtext && (
               <div className="flex items-center text-xs font-bold gap-1 group-hover:gap-2 transition-all">
@@ -65,7 +69,7 @@ export function StatCard({
       ) : (
         <>
           <div>
-            <p className="text-sm text-muted-foreground mb-1">{label}</p>
+            <p className="text-sm text-muted-foreground mb-1">{t(label)}</p>
             <h3 className={`text-2xl font-bold ${styles.valueColor}`}>{value}</h3>
             {subtext && (
               <p className={`text-xs font-medium mt-1 ${styles.subtextColor}`}>{subtext}</p>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   DashboardHeader,
   StatCard,
@@ -14,21 +16,21 @@ import {
 // Mock data
 const statsData = [
   {
-    label: 'Upcoming',
+    label: 'patient.upcoming',
     value: '1 Visit',
     subtext: 'Tomorrow, 10:00 AM',
     icon: 'calendar_month',
     variant: 'default' as const,
   },
   {
-    label: 'Total Reports',
+    label: 'patient.totalReports',
     value: '12',
     subtext: '+2 new this month',
     icon: 'folder_open',
     variant: 'default' as const,
   },
   {
-    label: 'Health Score',
+    label: 'patient.healthScore',
     value: '92%',
     subtext: '+3% vs last month',
     icon: 'favorite',
@@ -83,6 +85,9 @@ const weeklyStatsData = [
 ];
 
 export default function PatientDashboardPage() {
+  const { user } = useAuth();
+  const { t } = useLocale();
+
   // Medical History Table Columns
   const medicalHistoryColumns = [
     {
@@ -182,14 +187,23 @@ export default function PatientDashboardPage() {
     console.log('Clicked row:', row);
   };
 
+  const getWelcomeMessage = () => {
+    if (!user) return { title: t('dashboard.welcome'), subtitle: '' };
+    return {
+      title: `${t('dashboard.welcomeBack')}, ${user.firstName}`,
+      subtitle: t('dashboard.todaySummary'),
+    };
+  };
+
+  const messages = getWelcomeMessage();
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
       <DashboardHeader
-        title="Welcome back, Alex Mitchell"
-        subtitle="Everything looks great today. You have 1 appointment scheduled."
+        title={messages.title}
+        subtitle={messages.subtitle}
         notificationCount={1}
-        userInitials="A"
       />
 
       {/* Stats Grid */}
@@ -205,9 +219,9 @@ export default function PatientDashboardPage() {
           />
         ))}
         <QuickActionCard
-          title="Book New Visit"
-          subtitle="Quick Action"
-          actionLabel="BOOK NOW"
+          title={t('patient.bookNewVisit')}
+          subtitle={t('patient.quickAction')}
+          actionLabel={t('patient.bookNow')}
           icon="add_circle"
           onClick={handleBookNewVisit}
         />
@@ -218,7 +232,7 @@ export default function PatientDashboardPage() {
         {/* Left Column */}
         <div className="xl:col-span-2 space-y-6">
           {/* Next Appointment */}
-          <Section title="Next Appointment">
+          <Section title={t('patient.nextAppointment')}>
             <AppointmentCard
               specialty="Cardiologist"
               date="Tomorrow at 10:00 AM"
@@ -233,7 +247,7 @@ export default function PatientDashboardPage() {
           </Section>
 
           {/* Medical History */}
-          <Section title="Medical History" actionLabel="View All" onAction={handleViewAllHistory}>
+          <Section title={t('patient.medicalHistory')} actionLabel={t('patient.viewAll')} onAction={handleViewAllHistory}>
             <DataTable
               columns={medicalHistoryColumns}
               data={medicalHistoryData}
@@ -246,7 +260,7 @@ export default function PatientDashboardPage() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Medication Schedule */}
-          <Section title="Medication Schedule">
+          <Section title={t('patient.medicationSchedule')}>
             <MedicationSchedule
               date="Today, Oct 25"
               completedCount={3}
@@ -257,7 +271,7 @@ export default function PatientDashboardPage() {
           </Section>
 
           {/* Weekly Progress */}
-          <Section title="Weekly Progress">
+          <Section title={t('patient.weeklyProgress')}>
             <WeeklyProgress days={weeklyProgressData} stats={weeklyStatsData} />
           </Section>
         </div>
