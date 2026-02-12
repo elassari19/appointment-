@@ -176,7 +176,7 @@ export class AvailabilityService {
   ): Promise<BlockedSlot[]> {
     const queryBuilder = this.blockedSlotRepository
       .createQueryBuilder('blockedSlot')
-      .where('blockedSlot.doctor_id = :doctorId', { doctorId });
+      .where('blockedSlot.doctorId = :doctorId', { doctorId });
 
     if (startDate) {
       queryBuilder.andWhere('blockedSlot.date >= :startDate', { startDate });
@@ -213,10 +213,10 @@ export class AvailabilityService {
     
     const blockedSlot = await this.blockedSlotRepository
       .createQueryBuilder('blockedSlot')
-      .where('blockedSlot.doctor_id = :doctorId', { doctorId })
+      .where('blockedSlot.doctorId = :doctorId', { doctorId })
       .andWhere('blockedSlot.date = :date', { date: dateStr })
-      .andWhere('blockedSlot.start_time <= :time', { time })
-      .andWhere('blockedSlot.end_time > :time', { time })
+      .andWhere('blockedSlot.startTime <= :time', { time })
+      .andWhere('blockedSlot.endTime > :time', { time })
       .getOne();
 
     return !!blockedSlot;
