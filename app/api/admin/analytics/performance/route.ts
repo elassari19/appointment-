@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyticsService } from '@/lib/services/analytics.service';
 import { authenticateAdminAppRouter } from '@/lib/middleware/auth.middleware';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export async function GET(req: NextRequest) {
   const authResult = authenticateAdminAppRouter()(req);
 
@@ -13,12 +10,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const analytics = await analyticsService.getPlatformAnalytics();
-    return NextResponse.json(analytics);
+    const metrics = await analyticsService.getPerformanceMetrics();
+    return NextResponse.json(metrics);
   } catch (error) {
-    console.error('Failed to fetch analytics:', error);
+    console.error('Failed to fetch performance metrics:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch analytics data' },
+      { error: 'Failed to fetch performance metrics' },
       { status: 500 }
     );
   }
