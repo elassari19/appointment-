@@ -72,9 +72,6 @@ export enum AuditSeverity {
   CRITICAL = 'critical',
 }
 
-@Index(['userId', 'createdAt'])
-@Index(['action', 'createdAt'])
-@Index(['resourceType', 'resourceId'])
 @Entity('audit_logs')
 export class AuditLog {
   @PrimaryGeneratedColumn('uuid')

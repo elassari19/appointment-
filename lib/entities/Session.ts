@@ -13,22 +13,22 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'varchar', unique: true }) // Session token
+  @Column({ type: 'varchar', unique: true })
   token!: string;
 
-  @Column({ type: 'uuid' }) // Reference to user ID
+  @Column({ type: 'uuid' })
   userId!: string;
 
-  @Column({ type: 'timestamp', nullable: true }) // Expiration time
+  @Column({ type: 'timestamp', nullable: true })
   expiresAt?: Date;
 
-  @Column({ type: 'inet', nullable: true }) // IP address of the user
+  @Column({ type: 'inet', nullable: true })
   ipAddress?: string;
 
-  @Column({ type: 'text', nullable: true }) // User agent string
+  @Column({ type: 'text', nullable: true })
   userAgent?: string;
 
-  @Column({ type: 'boolean', default: true }) // Whether the session is active
+  @Column({ type: 'boolean', default: true })
   isActive!: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })

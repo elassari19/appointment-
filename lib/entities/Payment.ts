@@ -28,10 +28,10 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 }) // Amount in SAR
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount!: number;
 
-  @Column({ type: 'varchar', length: 50 }) // Currency code (SAR)
+  @Column({ type: 'varchar', length: 50 })
   currency!: string;
 
   @Column({
@@ -47,13 +47,13 @@ export class Payment {
   })
   method!: PaymentMethod;
 
-  @Column({ type: 'varchar', nullable: true }) // Transaction ID from payment provider
+  @Column({ type: 'varchar', nullable: true })
   transactionId?: string;
 
-  @Column({ type: 'text', nullable: true }) // Payment provider's reference
+  @Column({ type: 'text', nullable: true })
   reference?: string;
 
-  @Column({ type: 'text', nullable: true }) // Additional metadata
+  @Column({ type: 'text', nullable: true })
   metadata?: string;
 
   @CreateDateColumn({ type: 'timestamp' })

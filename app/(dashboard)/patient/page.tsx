@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -13,61 +14,54 @@ import {
   Section,
 } from '@/components/dashboard';
 
-// Mock data
-const statsData = [
-  {
-    label: 'patient.upcoming',
-    value: '1 Visit',
-    subtext: 'Tomorrow, 10:00 AM',
-    icon: 'calendar_month',
-    variant: 'default' as const,
-  },
-  {
-    label: 'patient.totalReports',
-    value: '12',
-    subtext: '+2 new this month',
-    icon: 'folder_open',
-    variant: 'default' as const,
-  },
-  {
-    label: 'patient.healthScore',
-    value: '92%',
-    subtext: '+3% vs last month',
-    icon: 'favorite',
-    variant: 'success' as const,
-  },
-];
+interface NextAppointment {
+  id: string;
+  specialty: string;
+  date: string;
+  formattedDate: string;
+  formattedTime: string;
+  doctorName: string;
+  doctorInitials: string;
+  description: string;
+  type: string;
+  duration: string;
+}
 
-const medicalHistoryData = [
-  {
-    date: 'Oct 24, 2023',
-    time: '09:30 AM',
-    doctor: 'Dr. James Anderson',
-    specialty: 'General Physician',
-    type: 'In-Person',
-    status: 'Completed',
-    hasReport: true,
-    hasLab: true,
-    initials: 'JA',
-  },
-  {
-    date: 'Sep 12, 2023',
-    time: '02:15 PM',
-    doctor: 'Dr. Emily White',
-    specialty: 'Dermatologist',
-    type: 'Video Call',
-    status: 'Completed',
-    hasReport: true,
-    hasLab: false,
-    initials: 'EW',
-  },
-];
+interface DashboardData {
+  nextAppointment: NextAppointment | null;
+  upcomingAppointments: Array<{
+    id: string;
+    date: string;
+    formattedDate: string;
+    formattedTime: string;
+    doctorName: string;
+    specialty: string;
+    status: string;
+    type: string;
+  }>;
+  medicalHistory: MedicalHistoryRow[];
+  stats: {
+    upcomingCount: number;
+    completedCount: number;
+    cancelledCount: number;
+    totalReports: number;
+  };
+}
 
-const medicationsData = [
-  { name: 'Vitamin D3', dosage: 'After breakfast • 1 Tablet', time: '08:00 AM', taken: true },
-  { name: 'Omega-3 Fish Oil', dosage: 'With lunch • 2 Softgels', time: '01:00 PM', taken: true },
-  { name: 'Metformin', dosage: 'After dinner • 1 Tablet', time: '08:00 PM', taken: false },
-];
+interface MedicalHistoryRow {
+  id: string;
+  date: string;
+  formattedDate: string;
+  formattedTime: string;
+  doctor: string;
+  specialty: string;
+  type: string;
+  status: string;
+  hasReport: boolean;
+  hasLab: boolean;
+  initials: string;
+  [key: string]: unknown;
+}
 
 const weeklyProgressData = [
   { day: 'M', height: '65%' },
@@ -84,20 +78,127 @@ const weeklyStatsData = [
   { label: 'Active Min.', value: '42m' },
 ];
 
+const medicationsData = [
+  { name: 'Vitamin D3', dosage: 'After breakfast • 1 Tablet', time: '08:00 AM', taken: true },
+  { name: 'Omega-3 Fish Oil', dosage: 'With lunch • 2 Softgels', time: '01:00 PM', taken: true },
+  { name: 'Metformin', dosage: 'After dinner • 1 Tablet', time: '08:00 PM', taken: false },
+];
+
 export default function PatientDashboardPage() {
   const { user } = useAuth();
   const { t } = useLocale();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Medical History Table Columns
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch('/api/patient/dashboard');
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const handleJoinMeeting = () => {
+    console.log('Joining meeting...');
+  };
+
+  const handleReschedule = () => {
+    console.log('Rescheduling appointment...');
+  };
+
+  const handleBookNewVisit = () => {
+    console.log('Booking new visit...');
+  };
+
+  const handleViewAllHistory = () => {
+    console.log('Viewing all history...');
+  };
+
+  const handleViewFullSchedule = () => {
+    console.log('Viewing full schedule...');
+  };
+
+  const handleRowClick = (row: MedicalHistoryRow) => {
+    console.log('Clicked row:', row);
+  };
+
+  const getWelcomeMessage = () => {
+    if (!user) return { title: t('dashboard.welcome'), subtitle: '' };
+    return {
+      title: `${t('dashboard.welcomeBack')}, ${user.firstName}`,
+      subtitle: t('dashboard.todaySummary'),
+    };
+  };
+
+  const messages = getWelcomeMessage();
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          Error loading dashboard: {error}
+        </div>
+      </div>
+    );
+  }
+
+  const statsData = [
+    {
+      label: 'patient.upcoming',
+      value: data?.stats.upcomingCount ? `${data.stats.upcomingCount} Visit${data.stats.upcomingCount !== 1 ? 's' : ''}` : '0 Visits',
+      subtext: data?.nextAppointment 
+        ? `${data.nextAppointment.formattedDate} at ${data.nextAppointment.formattedTime}`
+        : 'No upcoming visits',
+      icon: 'calendar_month',
+      variant: 'default' as const,
+    },
+    {
+      label: 'patient.totalReports',
+      value: data?.stats.totalReports.toString() || '0',
+      subtext: `+${data?.stats.completedCount || 0} completed`,
+      icon: 'folder_open',
+      variant: 'default' as const,
+    },
+    {
+      label: 'patient.healthScore',
+      value: '92%',
+      subtext: '+3% vs last month',
+      icon: 'favorite',
+      variant: 'success' as const,
+    },
+  ];
+
   const medicalHistoryColumns = [
     {
       key: 'date',
       title: 'Date',
       sortable: true,
-      render: (row: typeof medicalHistoryData[0]) => (
+      render: (row: MedicalHistoryRow) => (
         <>
-          <p className="font-semibold text-foreground">{row.date}</p>
-          <p className="text-xs text-muted-foreground">{row.time}</p>
+          <p className="font-semibold text-foreground">{row.formattedDate}</p>
+          <p className="text-xs text-muted-foreground">{row.formattedTime}</p>
         </>
       ),
     },
@@ -105,7 +206,7 @@ export default function PatientDashboardPage() {
       key: 'doctor',
       title: 'Doctor',
       sortable: true,
-      render: (row: typeof medicalHistoryData[0]) => (
+      render: (row: MedicalHistoryRow) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
             {row.initials}
@@ -120,7 +221,7 @@ export default function PatientDashboardPage() {
     {
       key: 'type',
       title: 'Type',
-      render: (row: typeof medicalHistoryData[0]) => (
+      render: (row: MedicalHistoryRow) => (
         <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
           {row.type}
         </span>
@@ -129,7 +230,7 @@ export default function PatientDashboardPage() {
     {
       key: 'status',
       title: 'Status',
-      render: (row: typeof medicalHistoryData[0]) => (
+      render: (row: MedicalHistoryRow) => (
         <div className="flex items-center gap-1.5 text-emerald-500">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           <span className="text-xs font-bold">{row.status}</span>
@@ -140,7 +241,7 @@ export default function PatientDashboardPage() {
       key: 'documents',
       title: 'Documents',
       align: 'right' as const,
-      render: (row: typeof medicalHistoryData[0]) => (
+      render: (row: MedicalHistoryRow) => (
         <div className="flex justify-end gap-2">
           {row.hasReport && (
             <button
@@ -163,47 +264,13 @@ export default function PatientDashboardPage() {
     },
   ];
 
-  const handleJoinMeeting = () => {
-    console.log('Joining meeting...');
-  };
-
-  const handleReschedule = () => {
-    console.log('Rescheduling appointment...');
-  };
-
-  const handleBookNewVisit = () => {
-    console.log('Booking new visit...');
-  };
-
-  const handleViewAllHistory = () => {
-    console.log('Viewing all history...');
-  };
-
-  const handleViewFullSchedule = () => {
-    console.log('Viewing full schedule...');
-  };
-
-  const handleRowClick = (row: typeof medicalHistoryData[0]) => {
-    console.log('Clicked row:', row);
-  };
-
-  const getWelcomeMessage = () => {
-    if (!user) return { title: t('dashboard.welcome'), subtitle: '' };
-    return {
-      title: `${t('dashboard.welcomeBack')}, ${user.firstName}`,
-      subtitle: t('dashboard.todaySummary'),
-    };
-  };
-
-  const messages = getWelcomeMessage();
-
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
       <DashboardHeader
         title={messages.title}
         subtitle={messages.subtitle}
-        notificationCount={1}
+        notificationCount={0}
       />
 
       {/* Stats Grid */}
@@ -232,25 +299,27 @@ export default function PatientDashboardPage() {
         {/* Left Column */}
         <div className="xl:col-span-2 space-y-6">
           {/* Next Appointment */}
-          <Section title={t('patient.nextAppointment')}>
-            <AppointmentCard
-              specialty="Cardiologist"
-              date="Tomorrow at 10:00 AM"
-              doctorName="Dr. Sarah Mitchell"
-              doctorInitials="SM"
-              description="Routine check-up to review your cardiovascular health and discuss recent laboratory results."
-              type="Video Call"
-              duration="30 Minutes"
-              onJoin={handleJoinMeeting}
-              onReschedule={handleReschedule}
-            />
-          </Section>
+          {data?.nextAppointment && (
+            <Section title={t('patient.nextAppointment')}>
+              <AppointmentCard
+                specialty={data.nextAppointment.specialty}
+                date={`${data.nextAppointment.formattedDate} at ${data.nextAppointment.formattedTime}`}
+                doctorName={data.nextAppointment.doctorName}
+                doctorInitials={data.nextAppointment.doctorInitials}
+                description={data.nextAppointment.description}
+                type={data.nextAppointment.type}
+                duration={data.nextAppointment.duration}
+                onJoin={handleJoinMeeting}
+                onReschedule={handleReschedule}
+              />
+            </Section>
+          )}
 
           {/* Medical History */}
           <Section title={t('patient.medicalHistory')} actionLabel={t('patient.viewAll')} onAction={handleViewAllHistory}>
             <DataTable
               columns={medicalHistoryColumns}
-              data={medicalHistoryData}
+              data={data?.medicalHistory || []}
               onRowClick={handleRowClick}
               sortable={true}
             />

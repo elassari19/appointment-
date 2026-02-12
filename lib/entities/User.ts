@@ -25,10 +25,10 @@ export class User {
   @Column({ type: 'varchar', length: 100 })
   lastName!: string;
 
-  @Column({ type: 'varchar', unique: true }) // email must be unique
+  @Column({ type: 'varchar', unique: true })
   email!: string;
 
-  @Column({ type: 'varchar', select: false }) // Don't select password by default
+  @Column({ type: 'varchar', select: false })
   password!: string;
 
   @Column({

@@ -30,16 +30,16 @@ export class Availability {
   })
   dayOfWeek!: DayOfWeek;
 
-  @Column({ type: 'time' }) // Format: HH:mm:ss
+  @Column({ type: 'time' })
   startTime!: string;
 
-  @Column({ type: 'time' }) // Format: HH:mm:ss
+  @Column({ type: 'time' })
   endTime!: string;
 
   @Column({ type: 'boolean', default: true })
   isAvailable!: boolean;
 
-  @Column({ type: 'integer', nullable: true }) // Duration in minutes, if null use default
+  @Column({ type: 'integer', nullable: true })
   defaultDuration?: number;
 
   @CreateDateColumn({ type: 'timestamp' })

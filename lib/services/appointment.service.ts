@@ -99,14 +99,14 @@ export class AppointmentService {
     }
 
     if (filters.startDate) {
-      queryBuilder.andWhere('appointment.start_time >= :startDate', { startDate: filters.startDate });
+      queryBuilder.andWhere('appointment.startTime >= :startDate', { startDate: filters.startDate });
     }
 
     if (filters.endDate) {
-      queryBuilder.andWhere('appointment.start_time <= :endDate', { endDate: filters.endDate });
+      queryBuilder.andWhere('appointment.startTime <= :endDate', { endDate: filters.endDate });
     }
 
-    queryBuilder.orderBy('appointment.start_time', 'ASC');
+    queryBuilder.orderBy('appointment.startTime', 'ASC');
 
     return await queryBuilder.getMany();
   }
