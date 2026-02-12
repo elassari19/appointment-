@@ -14,16 +14,16 @@ export class BlockedSlot {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'doctor_id' })
   doctorId!: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', name: 'date' })
   date!: Date;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', name: 'start_time' })
   startTime!: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', name: 'end_time' })
   endTime!: string;
 
   @Column({ type: 'text', nullable: true })
