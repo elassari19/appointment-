@@ -1,6 +1,7 @@
 import { AppDataSource } from '@/lib/database';
 import { AuditLog, AuditAction, AuditSeverity } from '@/lib/entities/AuditLog';
 import { In } from 'typeorm';
+import { filterContent, sanitizeContent, ContentCategory } from '@/lib/utils/content-filter';
 
 export interface ContentReport {
   id: string;
@@ -296,6 +297,57 @@ export class ModerationService {
       order: { createdAt: 'DESC' },
       take: 50,
     });
+  }
+
+  async filterChatMessage(content: string): Promise<{ allowed: boolean; sanitized: string; category?: ContentCategory }> {
+    const sanitized = sanitizeContent(content);
+    const result = filterContent(content);
+
+    return {
+      allowed: result.allowed,
+      sanitized,
+      category: result.category,
+    };
+  }
+
+  async checkAndReportContent(
+    content: string,
+    reporterId: string,
+    reporterEmail: string,
+    contentId: string,
+    contentType: 'chat_message' | 'appointment' | 'user_profile' | 'review'
+  ): Promise<{ filtered: boolean; report?: ContentReport }> {
+    const filterResult = filterContent(content);
+
+    if (!filterResult.allowed && filterResult.category) {
+      const report = await this.createReport({
+        reporterId,
+        reporterEmail,
+        reportedContentId: contentId,
+        reportedContentType: contentType,
+        category: this.mapCategoryToReportCategory(filterResult.category),
+        description: `Auto-filtered content: ${filterResult.reason}`,
+      });
+
+      return { filtered: true, report };
+    }
+
+    return { filtered: false };
+  }
+
+  private mapCategoryToReportCategory(category: ContentCategory): 'inappropriate_content' | 'hate_speech' | 'harassment' | 'spam' | 'misinformation' | 'other' {
+    switch (category) {
+      case 'spam':
+        return 'spam';
+      case 'harassment':
+        return 'harassment';
+      case 'hate':
+        return 'hate_speech';
+      case 'violence':
+        return 'misinformation';
+      default:
+        return 'inappropriate_content';
+    }
   }
 }
 
