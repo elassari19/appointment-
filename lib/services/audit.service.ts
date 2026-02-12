@@ -5,6 +5,17 @@ import { NextRequest } from 'next/server';
 
 export { AuditLog, AuditAction, AuditSeverity } from '@/lib/entities/AuditLog';
 
+export const AUDIT_ACTIONS = {
+  CONTENT_REPORTED: 'content_reported',
+  REPORT_RESOLVED: 'report_resolved',
+  REPORT_DISMISSED: 'report_dismissed',
+  REPORT_DELETED: 'report_deleted',
+  USER_BANNED: 'user_banned',
+  PERFORMANCE_ALERT_CREATED: 'performance_alert_created',
+  PERFORMANCE_ALERT_ACKNOWLEDGED: 'performance_alert_acknowledged',
+  PERFORMANCE_ALERT_RESOLVED: 'performance_alert_resolved',
+};
+
 export interface AuditLogData {
   user?: User;
   userId?: string;
