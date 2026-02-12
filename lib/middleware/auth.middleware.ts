@@ -33,6 +33,15 @@ export const authenticateUser =
     return handler(req as AuthenticatedRequest, res);
   };
 
+export const authenticatePatient = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
+  authenticateUser(handler, [UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
+
+export const authenticateDietitian = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
+  authenticateUser(handler, [UserRole.DIETITIAN, UserRole.ADMIN]);
+
+export const authenticateAdmin = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
+  authenticateUser(handler, [UserRole.ADMIN]);
+
 export const authenticateUserAppRouter = 
   (requiredRoles?: UserRole[]) =>
   async (req: NextRequest) => {
@@ -56,15 +65,11 @@ export const authenticateUserAppRouter =
     return { user };
   };
 
-export const authenticatePatient = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
-  authenticateUser(handler, [UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
+export const authenticatePatientAppRouter = () =>
+  authenticateUserAppRouter([UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
 
-export const authenticateDietitian = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
-  authenticateUser(handler, [UserRole.DIETITIAN, UserRole.ADMIN]);
+export const authenticateDietitianAppRouter = () =>
+  authenticateUserAppRouter([UserRole.DIETITIAN, UserRole.ADMIN]);
 
-export const authenticateAdmin = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
-  authenticateUser(handler, [UserRole.ADMIN]);
-
-export const authenticatePatientAppRouter = authenticateUserAppRouter([UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
-export const authenticateDietitianAppRouter = authenticateUserAppRouter([UserRole.DIETITIAN, UserRole.ADMIN]);
-export const authenticateAdminAppRouter = authenticateUserAppRouter([UserRole.ADMIN]);
+export const authenticateAdminAppRouter = () =>
+  authenticateUserAppRouter([UserRole.ADMIN]);
