@@ -40,14 +40,7 @@ export interface CalendarEvent {
     displayName?: string;
     responseStatus?: string;
   }>;
-  conferenceData?: {
-    createRequest?: {
-      requestId: string;
-      conferenceSolutionKey: {
-        type: string;
-      };
-    };
-  };
+  conferenceData?: ConferenceData;
   reminders?: {
     useDefault: boolean;
     overrides?: Array<{
@@ -65,8 +58,35 @@ export interface CalendarSyncResult {
 
 export interface GoogleCalendarTokens {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   expiresAt: Date;
+}
+
+export interface ConferenceEntryPoint {
+  entryPointType: string;
+  uri: string;
+  label?: string;
+}
+
+export interface ConferenceData {
+  createRequest?: {
+    requestId: string;
+    conferenceSolutionKey: {
+      type: string;
+    };
+  };
+  entryPoints?: ConferenceEntryPoint[];
+  conferenceSolution?: {
+    name: string;
+    key: { type: string };
+  };
+}
+
+export interface MeetSyncResult {
+  success: boolean;
+  eventId?: string;
+  meetingLink?: string;
+  error?: string;
 }
 
 export class GoogleCalendarService {
@@ -77,19 +97,19 @@ export class GoogleCalendarService {
   constructor(tokens?: GoogleCalendarTokens) {
     if (tokens) {
       this.accessToken = tokens.accessToken;
-      this.refreshToken = tokens.refreshToken;
+      this.refreshToken = tokens.refreshToken || null;
       this.expiresAt = tokens.expiresAt;
     }
   }
 
   setTokens(tokens: GoogleCalendarTokens): void {
     this.accessToken = tokens.accessToken;
-    this.refreshToken = tokens.refreshToken;
+    this.refreshToken = tokens.refreshToken || null;
     this.expiresAt = tokens.expiresAt;
   }
 
   isAuthenticated(): boolean {
-    return !!this.accessToken && !!this.refreshToken && 
+    return !!this.accessToken && 
            (!this.expiresAt || this.expiresAt > new Date());
   }
 
@@ -196,6 +216,47 @@ export class GoogleCalendarService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create calendar event',
+      };
+    }
+  }
+
+  async createEventWithMeet(event: CalendarEvent): Promise<MeetSyncResult> {
+    try {
+      const eventWithMeet = {
+        ...event,
+        conferenceDataVersion: 1,
+        conferenceData: event.conferenceData || {
+          createRequest: {
+            requestId: `nutrison-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            conferenceSolutionKey: {
+              type: 'hangoutsMeet',
+            },
+          },
+        },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'email', minutes: 24 * 60 },
+            { method: 'popup', minutes: 30 },
+          ],
+        },
+      };
+
+      const result = await this.makeRequest('/calendars/primary/events', 'POST', eventWithMeet);
+
+      const meetingLink = result.conferenceData?.entryPoints?.find(
+        (ep: any) => ep.entryPointType === 'video'
+      )?.uri;
+
+      return {
+        success: true,
+        eventId: result.id,
+        meetingLink: meetingLink || `https://meet.google.com/${result.id}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create Google Meet meeting',
       };
     }
   }

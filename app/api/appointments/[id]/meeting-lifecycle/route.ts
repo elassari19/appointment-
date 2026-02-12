@@ -11,7 +11,7 @@ export async function GET(
   try {
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
       where: { id: params.id },
-      relations: ['patient', 'dietitian'],
+      relations: ['patient', 'doctor'],
     });
 
     if (!appointment) {
@@ -29,6 +29,7 @@ export async function GET(
       phase: lifecycleInfo.phase,
       isOngoing: lifecycleInfo.isOngoing,
       status: appointment.status,
+      meetingLink: appointment.meetingLink,
     };
 
     if (lifecycleInfo.startedAt) {
@@ -48,12 +49,12 @@ export async function GET(
       };
     }
 
-    if (appointment.dietitian) {
+    if (appointment.doctor) {
       response.dietitian = {
-        id: appointment.dietitian.id,
-        firstName: appointment.dietitian.firstName,
-        lastName: appointment.dietitian.lastName,
-        email: appointment.dietitian.email,
+        id: appointment.doctor.id,
+        firstName: appointment.doctor.firstName,
+        lastName: appointment.doctor.lastName,
+        email: appointment.doctor.email,
       };
     }
 

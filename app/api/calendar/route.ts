@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
           GoogleCalendarService.appointmentToCalendarEvent(
             appointment as any,
             appointment.patient as any,
-            appointment.dietitian as any
+            appointment.doctor as any
           )
         );
         break;
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             GoogleCalendarService.appointmentToCalendarEvent(
               appointment as any,
               appointment.patient as any,
-              appointment.dietitian as any
+              appointment.doctor as any
             )
           );
         } else {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
             GoogleCalendarService.appointmentToCalendarEvent(
               appointment as any,
               appointment.patient as any,
-              appointment.dietitian as any
+              appointment.doctor as any
             )
           );
         }

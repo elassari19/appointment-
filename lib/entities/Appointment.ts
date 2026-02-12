@@ -48,6 +48,9 @@ export class Appointment {
   @Column({ type: 'text', nullable: true })
   meetingLink?: string;
 
+  @Column({ name: 'calendar_event_id', type: 'text', nullable: true })
+  calendarEventId?: string;
+
   @Column({ type: 'timestamp', nullable: true })
   confirmedAt?: Date;
 

@@ -2,6 +2,7 @@ import { AppDataSource } from '@/lib/database';
 import { User, UserRole } from '@/lib/entities/User';
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
 import { Availability, DayOfWeek } from '@/lib/entities/Availability';
+import { GoogleMeetService } from './google-meet.service';
 
 export interface CreateAppointmentData {
   patientId: string;
@@ -9,6 +10,17 @@ export interface CreateAppointmentData {
   startTime: Date;
   duration: number;
   notes?: string;
+}
+
+export interface CreateAppointmentWithMeetData extends CreateAppointmentData {
+  googleAccessToken: string;
+  googleRefreshToken?: string;
+}
+
+export interface AppointmentResult {
+  appointment: Appointment;
+  meetingLink?: string;
+  calendarEventId?: string;
 }
 
 export interface AppointmentFilters {
@@ -73,7 +85,88 @@ export class AppointmentService {
     return await this.appointmentRepository.save(appointment);
   }
 
+  async createAppointmentWithMeet(data: CreateAppointmentWithMeetData): Promise<AppointmentResult> {
+    const patient = await this.userRepository.findOne({
+      where: { id: data.patientId, isActive: true },
+    });
+
+    if (!patient) {
+      throw new Error('Patient not found');
+    }
+
+    const doctor = await this.userRepository.findOne({
+      where: { id: data.doctorId, role: UserRole.DOCTOR, isActive: true },
+    });
+
+    if (!doctor) {
+      throw new Error('Dietitian not found or not available');
+    }
+
+    const endTime = new Date(data.startTime);
+    endTime.setMinutes(endTime.getMinutes() + data.duration);
+
+    const conflicts = await this.checkAvailability(
+      data.doctorId,
+      data.startTime,
+      endTime
+    );
+
+    if (conflicts) {
+      throw new Error('The selected time slot is not available');
+    }
+
+    const appointment = new Appointment();
+    appointment.patient = patient;
+    appointment.doctor = doctor;
+    appointment.startTime = data.startTime;
+    appointment.duration = data.duration;
+    appointment.status = AppointmentStatus.SCHEDULED;
+    appointment.notes = data.notes;
+
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    let meetingLink: string | undefined;
+    let calendarEventId: string | undefined;
+
+    try {
+      const meetService = new GoogleMeetService();
+
+      const meetResult = await meetService.createMeetMeeting({
+        appointment: savedAppointment,
+        patient,
+        dietitian: doctor,
+        accessToken: data.googleAccessToken,
+        refreshToken: data.googleRefreshToken,
+      });
+
+      if (meetResult.success && meetResult.meetingLink) {
+        meetingLink = meetResult.meetingLink;
+        calendarEventId = meetResult.eventId;
+
+        savedAppointment.meetingLink = meetingLink;
+        if (calendarEventId) {
+          (savedAppointment as any).calendarEventId = calendarEventId;
+        }
+
+        await this.appointmentRepository.save(savedAppointment);
+      }
+    } catch (error) {
+      console.error('Failed to create Google Meet meeting:', error);
+    }
+
+    return {
+      appointment: savedAppointment,
+      meetingLink,
+      calendarEventId,
+    };
+  }
+
   async getAppointmentById(id: string): Promise<Appointment | null> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return null;
+    }
+
     return await this.appointmentRepository.findOne({
       where: { id },
       relations: ['patient', 'doctor'],
@@ -112,6 +205,11 @@ export class AppointmentService {
   }
 
   async updateAppointmentStatus(id: string, status: AppointmentStatus): Promise<Appointment | null> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return null;
+    }
+
     const appointment = await this.appointmentRepository.findOne({
       where: { id },
     });
@@ -134,6 +232,11 @@ export class AppointmentService {
   }
 
   async cancelAppointment(id: string, reason?: string): Promise<Appointment | null> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return null;
+    }
+
     const appointment = await this.appointmentRepository.findOne({
       where: { id },
     });
@@ -262,14 +365,41 @@ export class AppointmentService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .where('user.role = :role', { role: UserRole.DOCTOR })
-      .andWhere('user.is_active = :isActive', { isActive: true });
+      .andWhere('user.isActive = :isActive', { isActive: true });
 
     if (filters?.search) {
       queryBuilder.andWhere(
-        '(user.first_name ILIKE :search OR user.last_name ILIKE :search OR user.email ILIKE :search)',
+        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
         { search: `%${filters.search}%` }
       );
     }
+
+    return await queryBuilder.getMany();
+  }
+
+  async getAppointmentsByDoctorNameOrSpecialty(
+    patientId: string,
+    doctorName?: string,
+    specialty?: string
+  ): Promise<Appointment[]> {
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.patient', 'patient')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .where('appointment.patient_id = :patientId', { patientId });
+
+    if (doctorName) {
+      queryBuilder.andWhere(
+        '(doctor.first_name ILIKE :doctorName OR doctor.last_name ILIKE :doctorName)',
+        { doctorName: `%${doctorName}%` }
+      );
+    }
+
+    if (specialty) {
+      queryBuilder.andWhere('doctor.specialty ILIKE :specialty', { specialty: `%${specialty}%` });
+    }
+
+    queryBuilder.orderBy('appointment.startTime', 'DESC');
 
     return await queryBuilder.getMany();
   }

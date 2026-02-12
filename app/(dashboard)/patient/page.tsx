@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -87,6 +88,7 @@ const medicationsData = [
 export default function PatientDashboardPage() {
   const { user } = useAuth();
   const { t } = useLocale();
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export default function PatientDashboardPage() {
   };
 
   const handleBookNewVisit = () => {
-    console.log('Booking new visit...');
+    router.push('/patient/book');
   };
 
   const handleViewAllHistory = () => {

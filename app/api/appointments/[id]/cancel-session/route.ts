@@ -15,7 +15,7 @@ export async function POST(
 
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
       where: { id: params.id, status: AppointmentStatus.CONFIRMED },
-      relations: ['patient', 'dietitian'],
+      relations: ['patient', 'doctor'],
     });
 
     if (!appointment) {
@@ -37,7 +37,7 @@ export async function POST(
 
     const auditService = new AuditService();
     await auditService.log({
-      userId: appointment.dietitian.id,
+      userId: appointment.doctor.id,
       action: 'session_cancelled',
       entityType: 'Appointment',
       entityId: params.id,
