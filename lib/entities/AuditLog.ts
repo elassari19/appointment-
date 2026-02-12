@@ -32,6 +32,11 @@ export enum AuditAction {
   APPOINTMENT_NO_SHOW = 'appointment_no_show',
   APPOINTMENT_RESCHEDULED = 'appointment_rescheduled',
 
+  // Session Management
+  SESSION_STARTED = 'session_started',
+  SESSION_ENDED = 'session_ended',
+  SESSION_CANCELLED = 'session_cancelled',
+
   // Availability Management
   AVAILABILITY_CREATED = 'availability_created',
   AVAILABILITY_UPDATED = 'availability_updated',

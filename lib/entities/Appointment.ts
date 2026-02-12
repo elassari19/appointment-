@@ -79,6 +79,25 @@ export class Appointment {
   @Column({ type: 'integer', default: 1 })
   recurrencePosition!: number;
 
+  @Column({
+    type: 'enum',
+    enum: ['pre_session', 'active_session', 'post_session'],
+    default: 'pre_session',
+  })
+  meetingPhase!: 'pre_session' | 'active_session' | 'post_session';
+
+  @Column({ type: 'timestamp', nullable: true })
+  meetingStartedAt?: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  meetingEndedAt?: Date;
+
+  @Column({ type: 'text', nullable: true })
+  sessionNotes?: string;
+
+  @Column({ type: 'boolean', default: false })
+  wasCancelledFromSession!: boolean;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 

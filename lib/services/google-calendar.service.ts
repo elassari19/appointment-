@@ -1,6 +1,27 @@
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
 import { User } from '@/lib/entities/User';
 
+export enum MeetingPhase {
+  PRE_SESSION = 'pre_session',
+  ACTIVE_SESSION = 'active_session',
+  POST_SESSION = 'post_session',
+}
+
+export interface MeetingLifecycleInfo {
+  phase: MeetingPhase;
+  startedAt?: Date;
+  endedAt?: Date;
+  isOngoing: boolean;
+}
+
+export interface SessionEvent {
+  type: 'started' | 'ended' | 'cancelled';
+  timestamp: Date;
+  userId: string;
+  userEmail: string;
+  notes?: string;
+}
+
 export interface CalendarEvent {
   id?: string;
   summary: string;
@@ -292,5 +313,104 @@ Join meeting: ${appointment.meetingLink || 'TBD'}
   static generateMeetLink(): string {
     const meetingId = Math.random().toString(36).substring(2, 11);
     return `https://meet.google.com/${meetingId}`;
+  }
+
+  static getMeetingPhaseInfo(
+    startTime: Date,
+    endTime?: Date,
+    cancelledAt?: Date
+  ): MeetingLifecycleInfo {
+    const now = new Date();
+
+    if (cancelledAt && new Date(cancelledAt) <= now) {
+      return {
+        phase: MeetingPhase.POST_SESSION,
+        isOngoing: false,
+      };
+    }
+
+    if (endTime && new Date(endTime) < now) {
+      return {
+        phase: MeetingPhase.POST_SESSION,
+        endedAt: new Date(endTime),
+        isOngoing: false,
+      };
+    }
+
+    if (startTime <= now && (!endTime || now <= new Date(endTime))) {
+      return {
+        phase: MeetingPhase.ACTIVE_SESSION,
+        startedAt: new Date(startTime),
+        isOngoing: true,
+      };
+    }
+
+    return {
+      phase: MeetingPhase.PRE_SESSION,
+      isOngoing: false,
+    };
+  }
+
+  static getNextPhase(currentPhase: MeetingPhase): MeetingPhase {
+    const phases: MeetingPhase[] = [
+      MeetingPhase.PRE_SESSION,
+      MeetingPhase.ACTIVE_SESSION,
+      MeetingPhase.POST_SESSION,
+    ];
+    const currentIndex = phases.indexOf(currentPhase);
+    return currentIndex < phases.length - 1 ? phases[currentIndex + 1] : currentPhase;
+  }
+
+  static calculateSessionDuration(
+    startTime: Date,
+    endTime: Date
+  ): number {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+  }
+
+  static formatSessionSummary(
+    patient: User,
+    startTime: Date,
+    endTime: Date,
+    duration: number,
+    phase: MeetingPhase,
+    cancelledAt?: Date,
+    notes?: string
+  ): string {
+    let summary = `${patient.firstName} ${patient.lastName} - ${phase}\n`;
+    summary += `${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${duration} minutes)\n`;
+    summary += `Phase: ${phase}\n`;
+
+    if (notes) {
+      summary += `Notes:\n${notes}`;
+    }
+
+    if (cancelledAt) {
+      summary += `\nSession was cancelled`;
+    }
+
+    return summary;
+  }
+
+  static generateSessionSummary(
+    appointment: Appointment,
+    patient: User,
+    phase: MeetingPhase,
+    notes?: string
+  ): string {
+    const endTime = new Date(appointment.startTime);
+    endTime.setMinutes(endTime.getMinutes() + appointment.duration);
+
+    return this.formatSessionSummary(
+      patient,
+      appointment.startTime,
+      endTime,
+      appointment.duration,
+      phase,
+      appointment.cancelledAt,
+      notes
+    );
   }
 }
