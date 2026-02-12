@@ -65,6 +65,13 @@ export class AvailabilityService {
     return newAvailabilities;
   }
 
+  async updateDietitianAvailability(
+    doctorId: string,
+    availabilityData: AvailabilityData[]
+  ): Promise<Availability[]> {
+    return this.updateDoctorAvailability(doctorId, availabilityData);
+  }
+
   async bulkUpdateAvailability(
     doctorId: string,
     days: DayOfWeek[],

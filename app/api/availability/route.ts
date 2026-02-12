@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
 
     const { availability } = validationResult.data;
 
-    const updated = await availabilityService.updateDietitianAvailability(
+    const updated = await availabilityService.updateDoctorAvailability(
       userResult.userId,
       availability
     );
