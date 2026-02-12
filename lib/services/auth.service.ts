@@ -305,4 +305,53 @@ export class AuthService {
 
     return this.generateVerificationToken(email);
   }
+
+  async updateUser(userId: string, data: Partial<User>): Promise<User | null> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    Object.assign(user, data);
+    return await this.userRepository.save(user);
+  }
+
+  async loginWithMfa(userId: string, code: string): Promise<Session | null> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, isActive: true },
+      select: ['id', 'firstName', 'lastName', 'email', 'password', 'role', 'isActive', 'isMfaEnabled', 'mfaSecret'],
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    if (!user.isMfaEnabled || !user.mfaSecret) {
+      return null;
+    }
+
+    const mfaService = new (await import('@/lib/services/mfa.service')).MfaService();
+    const secret = mfaService.decryptSecret(user.mfaSecret);
+    const isValid = mfaService.verifyCode(secret, code);
+
+    if (!isValid) {
+      return null;
+    }
+
+    await this.sessionRepository.update(
+      { userId, isActive: true },
+      { isActive: false }
+    );
+
+    const session = new Session();
+    session.token = crypto.randomBytes(32).toString('hex');
+    session.userId = userId;
+    const now = new Date();
+    session.expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    return await this.sessionRepository.save(session);
+  }
 }

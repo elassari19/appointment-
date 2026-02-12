@@ -68,6 +68,15 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   resetPasswordExpiresAt?: Date;
 
+  @Column({ type: 'boolean', default: false })
+  isMfaEnabled!: boolean;
+
+  @Column({ type: 'text', nullable: true, select: false })
+  mfaSecret?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  recoveryCodes?: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 

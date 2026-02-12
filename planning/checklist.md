@@ -22,7 +22,7 @@
 - [x] Implement user profile management
 - [x] Implement user verification system
 - [x] Implement password reset functionality
-- [ ] Implement multi-factor authentication
+- [x] Implement multi-factor authentication
 
 ### Appointment Booking System
 - [x] Implement patient-facing features: browse dietitians, view schedules, book appointments
