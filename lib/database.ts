@@ -5,6 +5,7 @@ import { Appointment } from './entities/Appointment';
 import { Availability } from './entities/Availability';
 import { Payment } from './entities/Payment';
 import { AuditLog } from './entities/AuditLog';
+import { BlockedSlot } from './entities/BlockedSlot';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
-  entities: [User, Session, Appointment, Availability, Payment, AuditLog],
+  entities: [User, Session, Appointment, Availability, Payment, AuditLog, BlockedSlot],
   migrations: [__dirname + '/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {
