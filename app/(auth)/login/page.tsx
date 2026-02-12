@@ -69,13 +69,14 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         document.cookie = `session_token=${data.session.token}; path=/;`;
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
         
         switch(data.user.role) {
           case 'admin':
             router.push('/admin');
             break;
-          case 'dietitian':
-            router.push('/dietitian');
+          case 'doctor':
+            router.push('/doctors');
             break;
           case 'patient':
           default:

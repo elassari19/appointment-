@@ -1,6 +1,7 @@
 'use client';
 
 import {createContext, useContext, useState, useEffect, ReactNode} from 'react';
+import { setUserCookie } from '@/app/actions/auth';
 
 interface User {
   id: string;
@@ -28,7 +29,9 @@ export function AuthProvider({children}: {children: ReactNode}) {
     const saved = localStorage.getItem('auth_user');
     if (saved) {
       try {
-        setUser(JSON.parse(saved));
+        const parsedUser = JSON.parse(saved);
+        setUser(parsedUser);
+        setUserCookie(parsedUser);
       } catch {}
     }
   }, []);
@@ -36,11 +39,13 @@ export function AuthProvider({children}: {children: ReactNode}) {
   const login = (newUser: User) => {
     setUser(newUser);
     localStorage.setItem('auth_user', JSON.stringify(newUser));
+    setUserCookie(newUser);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('auth_user');
+    setUserCookie(null);
   };
 
   return (

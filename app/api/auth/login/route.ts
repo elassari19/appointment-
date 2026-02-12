@@ -57,6 +57,19 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60,
     });
 
+    response.cookies.set('auth_user', JSON.stringify({
+      id: result.user.id,
+      firstName: result.user.firstName,
+      lastName: result.user.lastName,
+      email: result.user.email,
+      role: result.user.role,
+    }), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
     return response;
   } catch (error) {
     console.error('Login error:', error);
