@@ -15,7 +15,7 @@ interface Message {
 interface Conversation {
   id: string;
   patientId: string;
-  dietitianId: string;
+  doctorId: string;
   lastMessageAt: string;
   createdAt: string;
 }

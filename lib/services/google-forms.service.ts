@@ -129,13 +129,13 @@ export class GoogleFormsService {
     return labels[fieldId] || fieldId;
   }
 
-  async createFormUrl(dietitianId: string, patientId: string): Promise<string> {
+  async createFormUrl(doctorId: string, patientId: string): Promise<string> {
     const baseFormUrl = process.env.GOOGLE_FORM_BASE_URL || 'https://docs.google.com/forms/d/e/FORM_ID/viewform';
     const formId = process.env.PATIENT_INTAKE_FORM_ID || 'default_form';
 
     const params = new URLSearchParams({
       usp: 'pp_url',
-      entry_dietitian_id: dietitianId,
+      entry_doctor_id: doctorId,
       entry_patient_id: patientId,
     });
 
@@ -158,17 +158,17 @@ export class GoogleFormsService {
     };
   }
 
-  async scheduleFollowUp(formData: IntakeFormData, dietitianId: string): Promise<Appointment | null> {
+  async scheduleFollowUp(formData: IntakeFormData, doctorId: string): Promise<Appointment | null> {
     try {
       const patient = await this.userRepository.findOne({
         where: { id: formData.patientId },
       });
 
-      const dietitian = await this.userRepository.findOne({
-        where: { id: dietitianId },
+      const doctor = await this.userRepository.findOne({
+        where: { id: doctorId },
       });
 
-      if (!patient || !dietitian) {
+      if (!patient || !doctor) {
         return null;
       }
 
@@ -178,7 +178,7 @@ export class GoogleFormsService {
 
       const appointment = new Appointment();
       appointment.patient = patient;
-      appointment.dietitian = dietitian;
+      appointment.doctor = doctor;
       appointment.startTime = appointmentDate;
       appointment.duration = 60;
       appointment.status = AppointmentStatus.SCHEDULED;

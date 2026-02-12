@@ -46,14 +46,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const dietitianId = searchParams.get('dietitianId');
+    const doctorId = searchParams.get('doctorId');
 
-    if (!dietitianId) {
-      return Response.json({ error: 'dietitianId is required' }, { status: 400 });
+    if (!doctorId) {
+      return Response.json({ error: 'doctorId is required' }, { status: 400 });
     }
 
-    const availability = await availabilityService.getDietitianAvailability(dietitianId);
-    const weeklySchedule = await availabilityService.getWeeklySchedule(dietitianId);
+    const availability = await availabilityService.getDoctorAvailability(doctorId);
+    const weeklySchedule = await availabilityService.getWeeklySchedule(doctorId);
 
     return Response.json({ availability, weeklySchedule });
   } catch (error) {

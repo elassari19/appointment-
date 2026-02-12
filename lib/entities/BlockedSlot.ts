@@ -15,7 +15,7 @@ export class BlockedSlot {
   id!: string;
 
   @Column({ type: 'uuid' })
-  dietitianId!: string;
+  doctorId!: string;
 
   @Column({ type: 'date' })
   date!: Date;

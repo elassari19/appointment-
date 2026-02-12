@@ -26,7 +26,7 @@ export class Conversation {
   patientId!: string;
 
   @Column({ type: 'uuid' })
-  dietitianId!: string;
+  doctorId!: string;
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;

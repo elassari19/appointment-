@@ -8,7 +8,7 @@ import { MoreThanOrEqual, LessThanOrEqual, LessThan } from 'typeorm';
 export interface PlatformAnalytics {
   totalUsers: {
     patients: number;
-    dietitians: number;
+    doctors: number;
     admins: number;
     total: number;
   };
@@ -101,7 +101,7 @@ export class AnalyticsService {
     ]);
 
     const allAppointments = await this.appointmentRepository.find({
-      relations: ['patient', 'dietitian']
+      relations: ['patient', 'doctor']
     });
 
     return {
@@ -144,14 +144,14 @@ export class AnalyticsService {
       },
       userEngagement: {
         activePatients: this.activeUsersByType(todayAppointments, 'patient'),
-        activeDietitians: this.activeUsersByType(todayAppointments, 'dietitian'),
+        activeDietitians: this.activeUsersByType(todayAppointments, 'doctor'),
         averageAppointmentsPerPatient: this.calculateAverageAppointmentsPerPatient(allAppointments),
         averageAppointmentsPerDietitian: this.calculateAverageAppointmentsPerDietitian(allAppointments),
         chatMessageVolume: this.getChatMessageVolume(),
       },
       growthMetrics: {
         newPatientsLastMonth: await this.countNewUsers(monthAgo, now, UserRole.PATIENT),
-        newDietitiansLastMonth: await this.countNewUsers(monthAgo, now, UserRole.DIETITIAN),
+        newDietitiansLastMonth: await this.countNewUsers(monthAgo, now, UserRole.DOCTOR),
         newAppointmentsLastMonth: monthAppointments.length,
         monthOverMonthGrowth: await this.calculateMonthOverMonthGrowth(),
       },
@@ -159,17 +159,17 @@ export class AnalyticsService {
   }
 
   private async getUsersByRole() {
-    const [patients, dietitians, admins] = await Promise.all([
+    const [patients, doctors, admins] = await Promise.all([
       this.userRepository.count({ where: { role: UserRole.PATIENT } }),
-      this.userRepository.count({ where: { role: UserRole.DIETITIAN } }),
+      this.userRepository.count({ where: { role: UserRole.DOCTOR } }),
       this.userRepository.count({ where: { role: UserRole.ADMIN } }),
     ]);
 
     return {
       patients,
-      dietitians,
+      doctors,
       admins,
-      total: patients + dietitians + admins,
+      total: patients + doctors + admins,
     };
   }
 
@@ -178,7 +178,7 @@ export class AnalyticsService {
       where: {
         createdAt: MoreThanOrEqual(startDate),
       },
-      relations: ['patient', 'dietitian']
+      relations: ['patient', 'doctor']
     }).then(appointments => appointments.filter(a => a.createdAt <= endDate));
   }
 
@@ -245,8 +245,8 @@ export class AnalyticsService {
     appointments.forEach(a => {
       if (userType === 'patient' && a.patient?.id) {
         userIds.add(a.patient.id);
-      } else if (userType === 'dietitian' && a.dietitian?.id) {
-        userIds.add(a.dietitian.id);
+      } else if (userType === 'doctor' && a.doctor?.id) {
+        userIds.add(a.doctor.id);
       }
     });
     return userIds.size;
@@ -263,13 +263,13 @@ export class AnalyticsService {
   }
 
   private calculateAverageAppointmentsPerDietitian(appointments: Appointment[]) {
-    const dietitianIds = new Set(appointments.map(a => a.dietitian?.id).filter(Boolean));
-    const dietitianCount = dietitianIds.size;
+    const doctorIds = new Set(appointments.map(a => a.doctor?.id).filter(Boolean));
+    const doctorCount = doctorIds.size;
 
-    if (dietitianCount === 0) return 0;
+    if (doctorCount === 0) return 0;
 
-    const totalAppointments = appointments.filter(a => a.dietitian?.id).length;
-    return totalAppointments / dietitianCount;
+    const totalAppointments = appointments.filter(a => a.doctor?.id).length;
+    return totalAppointments / doctorCount;
   }
 
   private getChatMessageVolume() {
@@ -347,15 +347,15 @@ export class AnalyticsService {
   async getTopPerformingDietitians(limit = 10) {
     const appointments = await this.appointmentRepository
       .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.dietitian', 'dietitian')
-      .select('dietitian.id', 'dietitianId')
-      .addSelect('dietitian.firstName', 'firstName')
-      .addSelect('dietitian.lastName', 'lastName')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .select('doctor.id', 'doctorId')
+      .addSelect('doctor.firstName', 'firstName')
+      .addSelect('doctor.lastName', 'lastName')
       .addSelect('COUNT(appointment.id)', 'appointmentCount')
       .addSelect('COALESCE(SUM(p.amount), 0)', 'totalRevenue')
       .leftJoin('appointment.payments', 'p')
       .where('appointment.status = :status', { status: AppointmentStatus.COMPLETED })
-      .groupBy('dietitian.id, dietitian.firstName, dietitian.lastName')
+      .groupBy('doctor.id, doctor.firstName, doctor.lastName')
       .orderBy('appointmentCount', 'DESC')
       .limit(limit)
       .getRawMany();
@@ -395,7 +395,7 @@ export class AnalyticsService {
         where: {
           createdAt: MoreThanOrEqual(startDate),
         },
-        relations: ['patient', 'dietitian']
+        relations: ['patient', 'doctor']
       });
       const count = appointments.filter(a => a.createdAt < endDate).length;
 
@@ -556,7 +556,7 @@ export class AnalyticsService {
     const totalAmount = completedPayments.reduce((sum, p) => sum + p.amount, 0);
 
     const uniquePatients = new Set(allAppointments.map(a => a.patient?.id).filter(Boolean)).size;
-    const uniqueDietitians = new Set(allAppointments.map(a => a.dietitian?.id).filter(Boolean)).size;
+    const uniqueDietitians = new Set(allAppointments.map(a => a.doctor?.id).filter(Boolean)).size;
 
     return {
       monthlyRecurringRevenue: totalAmount * 0.3,

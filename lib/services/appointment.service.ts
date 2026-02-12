@@ -5,7 +5,7 @@ import { Availability, DayOfWeek } from '@/lib/entities/Availability';
 
 export interface CreateAppointmentData {
   patientId: string;
-  dietitianId: string;
+  doctorId: string;
   startTime: Date;
   duration: number;
   notes?: string;
@@ -13,7 +13,7 @@ export interface CreateAppointmentData {
 
 export interface AppointmentFilters {
   patientId?: string;
-  dietitianId?: string;
+  doctorId?: string;
   status?: AppointmentStatus;
   startDate?: Date;
   endDate?: Date;
@@ -41,11 +41,11 @@ export class AppointmentService {
       throw new Error('Patient not found');
     }
 
-    const dietitian = await this.userRepository.findOne({
-      where: { id: data.dietitianId, role: UserRole.DIETITIAN, isActive: true },
+    const doctor = await this.userRepository.findOne({
+      where: { id: data.doctorId, role: UserRole.DOCTOR, isActive: true },
     });
 
-    if (!dietitian) {
+    if (!doctor) {
       throw new Error('Dietitian not found or not available');
     }
 
@@ -53,7 +53,7 @@ export class AppointmentService {
     endTime.setMinutes(endTime.getMinutes() + data.duration);
 
     const conflicts = await this.checkAvailability(
-      data.dietitianId,
+      data.doctorId,
       data.startTime,
       endTime
     );
@@ -64,7 +64,7 @@ export class AppointmentService {
 
     const appointment = new Appointment();
     appointment.patient = patient;
-    appointment.dietitian = dietitian;
+    appointment.doctor = doctor;
     appointment.startTime = data.startTime;
     appointment.duration = data.duration;
     appointment.status = AppointmentStatus.SCHEDULED;
@@ -76,7 +76,7 @@ export class AppointmentService {
   async getAppointmentById(id: string): Promise<Appointment | null> {
     return await this.appointmentRepository.findOne({
       where: { id },
-      relations: ['patient', 'dietitian'],
+      relations: ['patient', 'doctor'],
     });
   }
 
@@ -84,14 +84,14 @@ export class AppointmentService {
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
-      .leftJoinAndSelect('appointment.dietitian', 'dietitian');
+      .leftJoinAndSelect('appointment.doctor', 'doctor');
 
     if (filters.patientId) {
       queryBuilder.andWhere('appointment.patient_id = :patientId', { patientId: filters.patientId });
     }
 
-    if (filters.dietitianId) {
-      queryBuilder.andWhere('appointment.dietitian_id = :dietitianId', { dietitianId: filters.dietitianId });
+    if (filters.doctorId) {
+      queryBuilder.andWhere('appointment.doctor_id = :doctorId', { doctorId: filters.doctorId });
     }
 
     if (filters.status) {
@@ -150,18 +150,18 @@ export class AppointmentService {
   }
 
   async checkAvailability(
-    dietitianId: string,
+    doctorId: string,
     startTime: Date,
     endTime: Date
   ): Promise<boolean> {
     const conflictingAppointment = await this.appointmentRepository.findOne({
       where: [
         {
-          dietitian: { id: dietitianId },
+          doctor: { id: doctorId },
           status: AppointmentStatus.SCHEDULED,
         },
         {
-          dietitian: { id: dietitianId },
+          doctor: { id: doctorId },
           status: AppointmentStatus.CONFIRMED,
         },
       ],
@@ -184,7 +184,7 @@ export class AppointmentService {
   }
 
   async getAvailableSlots(
-    dietitianId: string,
+    doctorId: string,
     date: Date,
     duration: number = 60
   ): Promise<{ start: Date; end: Date }[]> {
@@ -192,7 +192,7 @@ export class AppointmentService {
     
     const availabilities = await this.availabilityRepository.find({
       where: {
-        dietitian: { id: dietitianId },
+        doctor: { id: doctorId },
         dayOfWeek,
         isAvailable: true,
       },
@@ -209,7 +209,7 @@ export class AppointmentService {
 
     const existingAppointments = await this.appointmentRepository.find({
       where: {
-        dietitian: { id: dietitianId },
+        doctor: { id: doctorId },
         startTime: startOfDay,
       },
     });
@@ -258,10 +258,10 @@ export class AppointmentService {
     return availableSlots;
   }
 
-  async getDietitians(filters?: { specialty?: string; search?: string }): Promise<User[]> {
+  async getDoctors(filters?: { specialty?: string; search?: string }): Promise<User[]> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
-      .where('user.role = :role', { role: UserRole.DIETITIAN })
+      .where('user.role = :role', { role: UserRole.DOCTOR })
       .andWhere('user.is_active = :isActive', { isActive: true });
 
     if (filters?.search) {

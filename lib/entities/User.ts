@@ -10,7 +10,7 @@ import { Session } from './Session';
 
 export enum UserRole {
   PATIENT = 'patient',
-  DIETITIAN = 'dietitian',
+  DOCTOR = 'doctor',
   ADMIN = 'admin',
 }
 
@@ -89,12 +89,12 @@ export class User {
   })
   patientAppointments!: any[];
 
-  @OneToMany('Appointment', 'dietitian', {
+  @OneToMany('Appointment', 'doctor', {
     cascade: true,
   })
-  dietitianAppointments!: any[];
+  doctorAppointments!: any[];
 
-  @OneToMany('Availability', 'dietitian', {
+  @OneToMany('Availability', 'doctor', {
     cascade: true,
   })
   availabilities!: any[];

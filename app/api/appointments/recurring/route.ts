@@ -12,7 +12,7 @@ const recurringService = new RecurringAppointmentService();
 const authService = new AuthService();
 
 const createRecurringSchema = z.object({
-  dietitianId: z.string().uuid('Invalid dietitian ID'),
+  doctorId: z.string().uuid('Invalid doctor ID'),
   startTime: z.string().datetime('Invalid start time'),
   duration: z.number().min(15, 'Duration must be at least 15 minutes'),
   notes: z.string().optional(),

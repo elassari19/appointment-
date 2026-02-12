@@ -9,7 +9,7 @@ const appointmentService = new AppointmentService();
 const authService = new AuthService();
 
 const createAppointmentSchema = z.object({
-  dietitianId: z.string().uuid('Invalid dietitian ID'),
+  doctorId: z.string().uuid('Invalid doctor ID'),
   startTime: z.string().datetime('Invalid start time'),
   duration: z.number().min(15, 'Duration must be at least 15 minutes'),
   notes: z.string().optional(),
@@ -88,11 +88,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { dietitianId, startTime, duration, notes } = validationResult.data;
+    const { doctorId, startTime, duration, notes } = validationResult.data;
 
     const appointment = await appointmentService.createAppointment({
       patientId: userResult.userId,
-      dietitianId,
+      doctorId,
       startTime: new Date(startTime),
       duration,
       notes,

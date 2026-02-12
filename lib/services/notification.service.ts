@@ -46,22 +46,22 @@ export class NotificationService {
 
   async sendAppointmentConfirmation(appointment: Appointment): Promise<void> {
     const patient = appointment.patient as User;
-    const dietitian = appointment.dietitian as User;
+    const doctor = appointment.doctor as User;
 
     await this.createNotification(
       patient.id,
       NotificationType.APPOINTMENT_CONFIRMATION,
       'Appointment Confirmed',
-      `Your appointment with ${dietitian.firstName} ${dietitian.lastName} has been confirmed for ${this.formatDateTime(appointment.startTime)}.`,
+      `Your appointment with ${doctor.firstName} ${doctor.lastName} has been confirmed for ${this.formatDateTime(appointment.startTime)}.`,
       {
         appointmentId: appointment.id,
         startTime: appointment.startTime,
-        dietitianId: dietitian.id,
+        doctorId: doctor.id,
       }
     );
 
     await this.createNotification(
-      dietitian.id,
+      doctor.id,
       NotificationType.APPOINTMENT_CONFIRMATION,
       'New Appointment',
       `New appointment scheduled with ${patient.firstName} ${patient.lastName} on ${this.formatDateTime(appointment.startTime)}.`,
@@ -75,13 +75,13 @@ export class NotificationService {
 
   async sendAppointmentReminder(appointment: Appointment, hoursBefore: number): Promise<void> {
     const patient = appointment.patient as User;
-    const dietitian = appointment.dietitian as User;
+    const doctor = appointment.doctor as User;
 
     await this.createNotification(
       patient.id,
       NotificationType.APPOINTMENT_REMINDER,
       'Appointment Reminder',
-      `Reminder: Your appointment with ${dietitian.firstName} ${dietitian.lastName} is in ${hoursBefore} hours.`,
+      `Reminder: Your appointment with ${doctor.firstName} ${doctor.lastName} is in ${hoursBefore} hours.`,
       {
         appointmentId: appointment.id,
         startTime: appointment.startTime,
@@ -95,10 +95,10 @@ export class NotificationService {
     reason?: string
   ): Promise<void> {
     const patient = appointment.patient as User;
-    const dietitian = appointment.dietitian as User;
+    const doctor = appointment.doctor as User;
 
-    const patientMessage = `Your appointment with ${dietitian.firstName} ${dietitian.lastName} on ${this.formatDateTime(appointment.startTime)} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`;
-    const dietitianMessage = `Appointment with ${patient.firstName} ${patient.lastName} on ${this.formatDateTime(appointment.startTime)} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`;
+    const patientMessage = `Your appointment with ${doctor.firstName} ${doctor.lastName} on ${this.formatDateTime(appointment.startTime)} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`;
+    const doctorMessage = `Appointment with ${patient.firstName} ${patient.lastName} on ${this.formatDateTime(appointment.startTime)} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`;
 
     await this.createNotification(
       patient.id,
@@ -113,10 +113,10 @@ export class NotificationService {
     );
 
     await this.createNotification(
-      dietitian.id,
+      doctor.id,
       NotificationType.APPOINTMENT_CANCELLED,
       'Appointment Cancelled',
-      dietitianMessage,
+      doctorMessage,
       {
         appointmentId: appointment.id,
         startTime: appointment.startTime,

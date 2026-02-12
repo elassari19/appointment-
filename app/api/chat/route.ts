@@ -61,10 +61,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversationId, patientId, dietitianId, content, type } = body;
+    const { conversationId, patientId, doctorId, content, type } = body;
 
-    if (patientId && dietitianId) {
-      const conversation = await chatService.createConversation(patientId, dietitianId);
+    if (patientId && doctorId) {
+      const conversation = await chatService.createConversation(patientId, doctorId);
       return NextResponse.json({ conversation });
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Invalid request: provide conversationId+content or patientId+dietitianId' },
+      { error: 'Invalid request: provide conversationId+content or patientId+doctorId' },
       { status: 400 }
     );
   } catch (error) {

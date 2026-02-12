@@ -13,23 +13,26 @@ interface NavItem {
 type UserRole = "admin" | "doctor" | "patient";
 
 const mainNav: NavItem[] = [
-  { title: "Dashboard", url: "/admin", icon: "grid_view", roles: ["admin", "doctor", "patient"] },
+  { title: "Dashboard", url: "/admin", icon: "grid_view", roles: ["admin"] },
+  { title: "Dashboard", url: "/doctors", icon: "grid_view", roles: ["doctor"] },
+  { title: "Dashboard", url: "/patient", icon: "grid_view", roles: ["patient"] },
   { title: "Appointments", url: "/admin/appointments", icon: "calendar_today", roles: ["admin"] },
+  { title: "My Appointments", url: "/doctors/appointments", icon: "calendar_today", roles: ["doctor"] },
   { title: "My Appointments", url: "/patient/appointments", icon: "calendar_today", roles: ["patient"] },
-  { title: "My Appointments", url: "/dietitian/appointments", icon: "calendar_today", roles: ["doctor"] },
   { title: "Book Appointment", url: "/patient/book", icon: "add_circle", roles: ["patient"] },
-  { title: "My Availability", url: "/dietitian/availability", icon: "schedule", roles: ["doctor"] },
-  { title: "Patients", url: "/admin/patients", icon: "people_outline", roles: ["admin", "doctor"] },
-  { title: "Doctors", url: "/admin/doctors", icon: "medication", roles: ["admin", "patient"] },
-  { title: "Messages", url: "/messages", icon: "chat_bubble_outline", roles: ["admin", "doctor", "patient"] },
-  { title: "Profile", url: "/profile", icon: "person", roles: ["admin", "doctor", "patient"] },
+  { title: "My Availability", url: "/doctors/availability", icon: "schedule", roles: ["doctor"] },
+  { title: "Patients", url: "/admin/patients", icon: "people_outline", roles: ["admin"] },
+  { title: "Doctors", url: "/admin/doctors", icon: "medication", roles: ["admin"] },
+  { title: "Profile", url: "/admin/profile", icon: "person", roles: ["admin"] },
+  { title: "Profile", url: "/doctors/profile", icon: "person", roles: ["doctor"] },
+  { title: "Profile", url: "/patient/profile", icon: "person", roles: ["patient"] },
 ];
 
 const managementNav: NavItem[] = [
-  { title: "Reports", url: "/admin/reports", icon: "bar_chart", roles: ["admin", "doctor"] },
+  { title: "Reports", url: "/admin/reports", icon: "bar_chart", roles: ["admin"] },
   { title: "Staff", url: "/admin/staff", icon: "badge", roles: ["admin"] },
   { title: "Audit Logs", url: "/admin/audit-logs", icon: "history_toggle_off", roles: ["admin"] },
-  { title: "Settings", url: "/admin/settings", icon: "settings", roles: ["admin", "doctor", "patient"] },
+  { title: "Settings", url: "/admin/settings", icon: "settings", roles: ["admin"] },
 ];
 
 interface AppSidebarProps {

@@ -27,19 +27,19 @@ export class AvailabilityService {
     return AppDataSource.getRepository(BlockedSlot);
   }
 
-  async getDietitianAvailability(dietitianId: string): Promise<Availability[]> {
+  async getDoctorAvailability(doctorId: string): Promise<Availability[]> {
     return await this.availabilityRepository.find({
-      where: { dietitian: { id: dietitianId } },
+      where: { doctor: { id: doctorId } },
       order: { dayOfWeek: 'ASC', startTime: 'ASC' },
     });
   }
 
-  async updateDietitianAvailability(
-    dietitianId: string,
+  async updateDoctorAvailability(
+    doctorId: string,
     availabilityData: AvailabilityData[]
   ): Promise<Availability[]> {
     const existing = await this.availabilityRepository.find({
-      where: { dietitian: { id: dietitianId } },
+      where: { doctor: { id: doctorId } },
     });
 
     for (const avail of existing) {
@@ -51,7 +51,7 @@ export class AvailabilityService {
     for (const data of availabilityData) {
       if (data.isAvailable) {
         const availability = new Availability();
-        availability.dietitian = { id: dietitianId } as User;
+        availability.doctor = { id: doctorId } as User;
         availability.dayOfWeek = data.dayOfWeek;
         availability.startTime = data.startTime;
         availability.endTime = data.endTime;
@@ -66,7 +66,7 @@ export class AvailabilityService {
   }
 
   async bulkUpdateAvailability(
-    dietitianId: string,
+    doctorId: string,
     days: DayOfWeek[],
     startTime: string,
     endTime: string,
@@ -76,7 +76,7 @@ export class AvailabilityService {
 
     for (const day of days) {
       const availability = new Availability();
-      availability.dietitian = { id: dietitianId } as User;
+      availability.doctor = { id: doctorId } as User;
       availability.dayOfWeek = day;
       availability.startTime = startTime;
       availability.endTime = endTime;
@@ -90,11 +90,11 @@ export class AvailabilityService {
   }
 
   async addAvailabilitySlot(
-    dietitianId: string,
+    doctorId: string,
     data: AvailabilityData
   ): Promise<Availability> {
     const availability = new Availability();
-    availability.dietitian = { id: dietitianId } as User;
+    availability.doctor = { id: doctorId } as User;
     availability.dayOfWeek = data.dayOfWeek;
     availability.startTime = data.startTime;
     availability.endTime = data.endTime;
@@ -117,10 +117,10 @@ export class AvailabilityService {
     return true;
   }
 
-  async getWeeklySchedule(dietitianId: string): Promise<{
+  async getWeeklySchedule(doctorId: string): Promise<{
     [key: string]: { start: string; end: string; isAvailable: boolean }[];
   }> {
-    const availability = await this.getDietitianAvailability(dietitianId);
+    const availability = await this.getDoctorAvailability(doctorId);
     const schedule: {
       [key: string]: { start: string; end: string; isAvailable: boolean }[];
     } = {};
@@ -149,11 +149,11 @@ export class AvailabilityService {
   }
 
   async addBlockedSlot(
-    dietitianId: string,
+    doctorId: string,
     data: BlockedSlotData
   ): Promise<BlockedSlot> {
     const blockedSlot = new BlockedSlot();
-    blockedSlot.dietitianId = dietitianId;
+    blockedSlot.doctorId = doctorId;
     blockedSlot.date = data.date;
     blockedSlot.startTime = data.startTime;
     blockedSlot.endTime = data.endTime;
@@ -163,13 +163,13 @@ export class AvailabilityService {
   }
 
   async getBlockedSlots(
-    dietitianId: string,
+    doctorId: string,
     startDate?: Date,
     endDate?: Date
   ): Promise<BlockedSlot[]> {
     const queryBuilder = this.blockedSlotRepository
       .createQueryBuilder('blockedSlot')
-      .where('blockedSlot.dietitian_id = :dietitianId', { dietitianId });
+      .where('blockedSlot.doctor_id = :doctorId', { doctorId });
 
     if (startDate) {
       queryBuilder.andWhere('blockedSlot.date >= :startDate', { startDate });
@@ -198,7 +198,7 @@ export class AvailabilityService {
   }
 
   async isSlotBlocked(
-    dietitianId: string,
+    doctorId: string,
     date: Date,
     time: string
   ): Promise<boolean> {
@@ -206,7 +206,7 @@ export class AvailabilityService {
     
     const blockedSlot = await this.blockedSlotRepository
       .createQueryBuilder('blockedSlot')
-      .where('blockedSlot.dietitian_id = :dietitianId', { dietitianId })
+      .where('blockedSlot.doctor_id = :doctorId', { doctorId })
       .andWhere('blockedSlot.date = :date', { date: dateStr })
       .andWhere('blockedSlot.start_time <= :time', { time })
       .andWhere('blockedSlot.end_time > :time', { time })
@@ -215,12 +215,12 @@ export class AvailabilityService {
     return !!blockedSlot;
   }
 
-  async getBlockedSlotsForDate(dietitianId: string, date: Date): Promise<BlockedSlot[]> {
+  async getBlockedSlotsForDate(doctorId: string, date: Date): Promise<BlockedSlot[]> {
     const dateStr = date.toISOString().split('T')[0];
     
     return await this.blockedSlotRepository.find({
       where: {
-        dietitianId,
+        doctorId,
         date: dateStr as any,
       },
       order: { startTime: 'ASC' },

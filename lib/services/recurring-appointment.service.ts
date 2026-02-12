@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 export interface RecurringAppointmentData {
   patientId: string;
-  dietitianId: string;
+  doctorId: string;
   startTime: Date;
   duration: number;
   notes?: string;
@@ -38,11 +38,11 @@ export class RecurringAppointmentService {
       throw new Error('Patient not found');
     }
 
-    const dietitian = await this.userRepository.findOne({
-      where: { id: data.dietitianId, role: 'dietitian' as any, isActive: true },
+    const doctor = await this.userRepository.findOne({
+      where: { id: data.doctorId, role: 'doctor' as any, isActive: true },
     });
 
-    if (!dietitian) {
+    if (!doctor) {
       throw new Error('Dietitian not found');
     }
 
@@ -58,7 +58,7 @@ export class RecurringAppointmentService {
 
       const appointment = new Appointment();
       appointment.patient = patient;
-      appointment.dietitian = dietitian;
+      appointment.doctor = doctor;
       appointment.startTime = new Date(currentDate);
       appointment.duration = data.duration;
       appointment.status = AppointmentStatus.SCHEDULED;
@@ -192,8 +192,8 @@ export class RecurringAppointmentService {
     return await this.appointmentRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
-      .leftJoinAndSelect('appointment.dietitian', 'dietitian')
-      .where('(appointment.patient_id = :userId OR appointment.dietitian_id = :userId)', {
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .where('(appointment.patient_id = :userId OR appointment.doctor_id = :userId)', {
         userId,
       })
       .andWhere('appointment.is_recurring = :isRecurring', { isRecurring: true })

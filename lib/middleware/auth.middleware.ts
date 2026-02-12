@@ -34,10 +34,10 @@ export const authenticateUser =
   };
 
 export const authenticatePatient = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
-  authenticateUser(handler, [UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
+  authenticateUser(handler, [UserRole.PATIENT, UserRole.DOCTOR, UserRole.ADMIN]);
 
 export const authenticateDietitian = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
-  authenticateUser(handler, [UserRole.DIETITIAN, UserRole.ADMIN]);
+  authenticateUser(handler, [UserRole.DOCTOR, UserRole.ADMIN]);
 
 export const authenticateAdmin = (handler: (req: AuthenticatedRequest, res: NextApiResponse) => void) =>
   authenticateUser(handler, [UserRole.ADMIN]);
@@ -66,10 +66,10 @@ export const authenticateUserAppRouter =
   };
 
 export const authenticatePatientAppRouter = () =>
-  authenticateUserAppRouter([UserRole.PATIENT, UserRole.DIETITIAN, UserRole.ADMIN]);
+  authenticateUserAppRouter([UserRole.PATIENT, UserRole.DOCTOR, UserRole.ADMIN]);
 
 export const authenticateDietitianAppRouter = () =>
-  authenticateUserAppRouter([UserRole.DIETITIAN, UserRole.ADMIN]);
+  authenticateUserAppRouter([UserRole.DOCTOR, UserRole.ADMIN]);
 
 export const authenticateAdminAppRouter = () =>
   authenticateUserAppRouter([UserRole.ADMIN]);

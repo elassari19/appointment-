@@ -31,11 +31,11 @@ export class ChatService {
     return AppDataSource.getRepository(Message);
   }
 
-  async createConversation(patientId: string, dietitianId: string): Promise<Conversation> {
+  async createConversation(patientId: string, doctorId: string): Promise<Conversation> {
     const existing = await this.conversationRepository.findOne({
       where: [
-        { patientId, dietitianId },
-        { patientId: dietitianId, dietitianId: patientId },
+        { patientId, doctorId },
+        { patientId: doctorId, doctorId: patientId },
       ],
     });
 
@@ -46,7 +46,7 @@ export class ChatService {
 
     const conversation = this.conversationRepository.create({
       patientId,
-      dietitianId,
+      doctorId,
       lastMessageAt: new Date(),
     });
 
@@ -57,11 +57,11 @@ export class ChatService {
     return this.conversationRepository.findOne({ where: { id: conversationId } });
   }
 
-  async getConversationByUsers(patientId: string, dietitianId: string): Promise<Conversation | null> {
+  async getConversationByUsers(patientId: string, doctorId: string): Promise<Conversation | null> {
     return this.conversationRepository.findOne({
       where: [
-        { patientId, dietitianId },
-        { patientId: dietitianId, dietitianId: patientId },
+        { patientId, doctorId },
+        { patientId: doctorId, doctorId: patientId },
       ],
     });
   }
@@ -69,7 +69,7 @@ export class ChatService {
   async getUserConversations(userId: string): Promise<Conversation[]> {
     return this.conversationRepository
       .createQueryBuilder('conversation')
-      .where('conversation.patientId = :userId OR conversation.dietitianId = :userId', { userId })
+      .where('conversation.patientId = :userId OR conversation.doctorId = :userId', { userId })
       .andWhere('conversation.isActive = true')
       .orderBy('conversation.lastMessageAt', 'DESC')
       .getMany();

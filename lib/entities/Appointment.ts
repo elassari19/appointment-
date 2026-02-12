@@ -112,12 +112,12 @@ export class Appointment {
   @JoinColumn({ name: 'patient_id' })
   patient!: any;
 
-  @ManyToOne('User', 'dietitianAppointments', {
+  @ManyToOne('User', 'doctorAppointments', {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'dietitian_id' })
-  dietitian!: any;
+  @JoinColumn({ name: 'doctor_id' })
+  doctor!: any;
 
   @ManyToOne('Availability', 'appointments', {
     eager: false,

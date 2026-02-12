@@ -53,8 +53,8 @@ export class Availability {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'dietitian_id' })
-  dietitian!: any;
+  @JoinColumn({ name: 'doctor_id' })
+  doctor!: any;
 
   @OneToMany('Appointment', 'availability', {
     cascade: true,

@@ -5,7 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useState } from "react";
 
-type UserRole = "admin" | "doctor" | "patient";
+type UserRole = 'admin' | 'doctor' | 'patient';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
