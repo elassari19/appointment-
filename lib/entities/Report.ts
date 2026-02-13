@@ -31,7 +31,7 @@ export enum ReportReason {
   OTHER = 'other',
 }
 
-@Entity('reports')
+@Entity('Reports')
 export class Report {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -58,31 +58,31 @@ export class Report {
   @Column({ type: 'text' })
   description!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   reportedContentId?: string;
 
-  @Column({ nullable: true, type: 'text' })
+  @Column({ type: 'text', nullable: true })
   reportedContent?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   reportedUserId?: string;
 
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'reportedUserId' })
+  @JoinColumn()
   reportedUser?: User;
 
-  @Column()
+  @Column({ type: 'varchar' })
   reporterId!: string;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'reporterId' })
+  @JoinColumn()
   reporter!: User;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   moderatorId?: string;
 
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'moderatorId' })
+  @JoinColumn()
   moderator?: User;
 
   @Column({ nullable: true, type: 'text' })
@@ -94,6 +94,6 @@ export class Report {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   resolvedAt?: Date;
 }

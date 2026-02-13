@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Session } from './Session';
+import { DoctorProfile } from './DoctorProfile';
 
 export enum UserRole {
   PATIENT = 'patient',
@@ -14,7 +16,7 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
-@Entity('users')
+@Entity('Users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -103,4 +105,7 @@ export class User {
     cascade: true,
   })
   sessions!: Session[];
+
+  @OneToOne(() => DoctorProfile, 'user')
+  doctorProfile?: DoctorProfile;
 }

@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-@Entity('sessions')
+@Entity('Sessions')
 export class Session {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -42,6 +42,6 @@ export class Session {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn()
   user!: any;
 }

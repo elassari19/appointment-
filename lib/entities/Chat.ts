@@ -17,7 +17,7 @@ export enum MessageType {
   SYSTEM = 'system',
 }
 
-@Entity('conversations')
+@Entity('Conversations')
 export class Conversation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -41,7 +41,7 @@ export class Conversation {
   updatedAt!: Date;
 }
 
-@Entity('messages')
+@Entity('Messages')
 export class Message {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

@@ -72,7 +72,7 @@ export enum AuditSeverity {
   CRITICAL = 'critical',
 }
 
-@Entity('audit_logs')
+@Entity('AuditLogs')
 export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

@@ -23,7 +23,7 @@ export enum PaymentMethod {
   APPLE_PAY = 'apple_pay',
 }
 
-@Entity('payments')
+@Entity('Payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -67,6 +67,6 @@ export class Payment {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'appointment_id' })
+  @JoinColumn()
   appointment!: any;
 }

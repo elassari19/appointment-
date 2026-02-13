@@ -19,7 +19,7 @@ export enum DayOfWeek {
   SUNDAY = 'sunday',
 }
 
-@Entity('availabilities')
+@Entity('Availabilities')
 export class Availability {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -53,7 +53,7 @@ export class Availability {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'doctor_id' })
+  @JoinColumn()
   doctor!: any;
 
   @OneToMany('Appointment', 'availability', {

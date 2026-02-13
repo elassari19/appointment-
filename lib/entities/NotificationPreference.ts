@@ -5,7 +5,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('notification_preferences')
+@Entity('NotificationPreferences')
 export class NotificationPreference {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

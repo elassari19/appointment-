@@ -16,7 +16,7 @@ export enum NotificationType {
   MEETING_LINK_READY = 'meeting_link_ready',
 }
 
-@Entity('notifications')
+@Entity('Notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

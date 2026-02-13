@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('idempotency_keys')
+@Entity('IdempotencyKeys')
 export class IdempotencyKey {
   @PrimaryColumn({ type: 'varchar', length: 255 })
   key!: string;

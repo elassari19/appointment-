@@ -9,29 +9,29 @@ import {
 } from 'typeorm';
 import { User } from './User';
 
-@Entity('blocked_slots')
+@Entity('BlockedSlots')
 export class BlockedSlot {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'uuid', name: 'doctor_id' })
+  @Column({ type: 'uuid' })
   doctorId!: string;
 
-  @Column({ type: 'date', name: 'date' })
+  @Column({ type: 'date' })
   date!: Date;
 
-  @Column({ type: 'time', name: 'start_time' })
+  @Column({ type: 'time' })
   startTime!: string;
 
-  @Column({ type: 'time', name: 'end_time' })
+  @Column({ type: 'time' })
   endTime!: string;
 
   @Column({ type: 'text', nullable: true })
   reason?: string;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }

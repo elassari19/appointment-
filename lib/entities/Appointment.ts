@@ -24,7 +24,7 @@ export enum RecurrenceFrequency {
   MONTHLY = 'monthly',
 }
 
-@Entity('appointments')
+@Entity('Appointments')
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -48,7 +48,7 @@ export class Appointment {
   @Column({ type: 'text', nullable: true })
   meetingLink?: string;
 
-  @Column({ name: 'calendar_event_id', type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   calendarEventId?: string;
 
   @Column({ type: 'timestamp', nullable: true })
@@ -112,21 +112,21 @@ export class Appointment {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'patient_id' })
+  @JoinColumn()
   patient!: any;
 
   @ManyToOne('User', 'doctorAppointments', {
     eager: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'doctor_id' })
+  @JoinColumn()
   doctor!: any;
 
   @ManyToOne('Availability', 'appointments', {
     eager: false,
     onDelete: 'SET NULL',
   })
-  @JoinColumn({ name: 'availability_id' })
+  @JoinColumn()
   availability!: any;
 
   @OneToMany('Payment', 'appointment', {
