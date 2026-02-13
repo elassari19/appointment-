@@ -161,13 +161,14 @@ export default function PatientAppointmentsPage() {
   };
 
   const filteredAppointments = appointments.filter((apt) => {
-    const aptDate = new Date(apt.startTime);
+    const aptStartDate = new Date(apt.startTime);
+    const aptEndDate = new Date(aptStartDate.getTime() + apt.duration * 60000);
     const now = new Date();
 
     if (filter === 'upcoming') {
-      return aptDate >= now && apt.status !== AppointmentStatus.CANCELLED;
+      return aptEndDate > now && apt.status !== AppointmentStatus.CANCELLED;
     } else if (filter === 'past') {
-      return aptDate < now || apt.status === AppointmentStatus.COMPLETED;
+      return aptEndDate <= now || apt.status === AppointmentStatus.COMPLETED;
     }
     return true;
   }).sort((a, b) => {

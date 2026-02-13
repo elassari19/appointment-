@@ -41,7 +41,11 @@ export async function GET(request: NextRequest) {
         apt.status === AppointmentStatus.SCHEDULED || 
         apt.status === AppointmentStatus.CONFIRMED
       )
-      .filter(apt => new Date(apt.startTime) > new Date())
+      .filter(apt => {
+        const aptStart = new Date(apt.startTime);
+        const aptEnd = new Date(aptStart.getTime() + apt.duration * 60000);
+        return aptEnd > new Date();
+      })
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .slice(0, 5);
 
