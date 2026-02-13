@@ -6,6 +6,13 @@ import { Availability } from './entities/Availability';
 import { Payment } from './entities/Payment';
 import { AuditLog } from './entities/AuditLog';
 import { BlockedSlot } from './entities/BlockedSlot';
+import { DoctorProfile } from './entities/DoctorProfile';
+import { Review } from './entities/Review';
+import { Conversation, Message } from './entities/Chat';
+import { Notification } from './entities/Notification';
+import { NotificationPreference } from './entities/NotificationPreference';
+import { Report } from './entities/Report';
+import { IdempotencyKey } from './entities/IdempotencyKey';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -13,11 +20,11 @@ export const AppDataSource = new DataSource({
   port: parseInt(process.env.DB_PORT || '5432'),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'nutrison_db',
+  database: process.env.DB_NAME || 'appoinpment',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
-  entities: [User, Session, Appointment, Availability, Payment, AuditLog, BlockedSlot],
+  entities: [User, Session, Appointment, Availability, Payment, AuditLog, BlockedSlot, DoctorProfile, Review, Conversation, Message, Notification, NotificationPreference, Report, IdempotencyKey],
   migrations: [__dirname + '/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {

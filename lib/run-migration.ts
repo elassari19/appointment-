@@ -1,5 +1,5 @@
 import { AppDataSource } from './database';
-import { AddCalendarEventId1700000000000 } from './migrations/1700000000000-AddCalendarEventId';
+import { ConvertToCamelCase1700000000002 } from './migrations/1700000000002-ConvertToCamelCase';
 
 async function runMigration() {
   try {
@@ -9,10 +9,11 @@ async function runMigration() {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
 
-    const migration = new AddCalendarEventId1700000000000();
+    const migration = new ConvertToCamelCase1700000000002();
     await migration.up(queryRunner);
 
     console.log('Migration completed successfully!');
+    console.log('Note: New tables will be created automatically on next application start with synchronize enabled');
     await queryRunner.release();
     await AppDataSource.destroy();
   } catch (error) {
