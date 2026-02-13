@@ -1,16 +1,13 @@
-import { ProfileForm } from '@/components/profile/ProfileForm';
+import { DoctorPublicProfile } from '@/components/doctors/DoctorPublicProfile';
 
-export default function DietitianProfilePage() {
+interface PageProps {
+  params: Promise<{ id?: string }>;
+}
+
+export default async function DoctorProfilePage({ params }: PageProps) {
+  const resolvedParams = await params;
+  
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your professional profile and information
-        </p>
-      </div>
-
-      <ProfileForm />
-    </div>
+    <DoctorPublicProfile doctorId={resolvedParams?.id} />
   );
 }
