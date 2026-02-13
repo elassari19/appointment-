@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientId = process.env.GOOGLE_CLIENTId;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calendar/callback`;
 

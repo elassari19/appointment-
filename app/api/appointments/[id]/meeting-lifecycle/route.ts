@@ -6,11 +6,12 @@ import { GoogleCalendarService, MeetingPhase, MeetingLifecycleInfo } from '@/lib
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id },
+      where: { id },
       relations: ['patient', 'doctor'],
     });
 
@@ -25,7 +26,7 @@ export async function GET(
     );
 
     const response: any = {
-      appointmentId: params.id,
+      appointmentId: id,
       phase: lifecycleInfo.phase,
       isOngoing: lifecycleInfo.isOngoing,
       status: appointment.status,

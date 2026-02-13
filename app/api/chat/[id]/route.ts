@@ -22,7 +22,7 @@ async function getUserFromRequest(request: NextRequest): Promise<{ userId: strin
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userResult = await getUserFromRequest(request);
@@ -30,7 +30,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const success = await chatService.deleteMessage(params.id);
+    const { id } = await params;
+    const success = await chatService.deleteMessage(id);
     if (!success) {
       return NextResponse.json(
         { error: 'Message not found' },

@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const authResult = authenticateAdminAppRouter()(req);
+  const authResult = await authenticateAdminAppRouter()(req);
 
   if (authResult instanceof NextResponse) {
     return authResult;

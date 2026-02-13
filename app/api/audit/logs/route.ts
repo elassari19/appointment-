@@ -4,7 +4,7 @@ import { auditService } from '@/lib/services/audit.service';
 import { AuditAction } from '@/lib/entities/AuditLog';
 
 export async function GET(request: NextRequest) {
-  const authResult = await authenticateAdminAppRouter(request);
+  const authResult = await authenticateAdminAppRouter()(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

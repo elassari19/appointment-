@@ -3,15 +3,16 @@ import { AppDataSource } from '@/lib/database';
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
 import { User } from '@/lib/entities/User';
 import { MeetingPhase } from '@/lib/services/google-calendar.service';
-import { AuditService } from '@/lib/services/audit.service';
+import { AuditService, AuditAction } from '@/lib/services/audit.service';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id, status: AppointmentStatus.CONFIRMED },
+      where: { id, status: AppointmentStatus.CONFIRMED },
       relations: ['patient', 'doctor'],
     });
 
@@ -30,27 +31,24 @@ export async function POST(
     const endTime = new Date(appointment.startTime);
     endTime.setMinutes(endTime.getMinutes() + appointment.duration);
 
-    await AppDataSource.getRepository(Appointment).update(params.id, {
+    await AppDataSource.getRepository(Appointment).update(id, {
       meetingPhase: MeetingPhase.ACTIVE_SESSION,
       meetingStartedAt: now,
     });
 
     const updatedAppointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id },
+      where: { id },
     });
 
     const auditService = new AuditService();
     await auditService.log({
       userId: appointment.doctor.id,
-      action: 'session_started',
-      entityType: 'Appointment',
-      entityId: params.id,
-      details: {
-        appointmentId: params.id,
-        startTime: appointment.startTime,
-        endTime: endTime,
-        patient: appointment.patient.email,
-      },
+      action: AuditAction.SESSION_STARTED,
+      resourceType: 'Appointment',
+      resourceId: id,
+      description: `Session started for appointment with ${appointment.patient.email}`,
+      oldValues: { meetingPhase: appointment.meetingPhase },
+      newValues: { meetingPhase: MeetingPhase.ACTIVE_SESSION },
     });
 
     return NextResponse.json({

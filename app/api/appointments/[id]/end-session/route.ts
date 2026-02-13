@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AppDataSource } from '@/lib/database';
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
 import { MeetingPhase } from '@/lib/services/google-calendar.service';
-import { AuditService } from '@/lib/services/audit.service';
+import { AuditService, AuditAction } from '@/lib/services/audit.service';
 import { GoogleCalendarService } from '@/lib/services/google-calendar.service';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id, status: AppointmentStatus.CONFIRMED },
+      where: { id, status: AppointmentStatus.CONFIRMED },
       relations: ['patient', 'doctor'],
     });
 
@@ -30,33 +31,25 @@ export async function POST(
     const endTime = new Date(appointment.startTime);
     endTime.setMinutes(endTime.getMinutes() + appointment.duration);
 
-    await AppDataSource.getRepository(Appointment).update(params.id, {
+    await AppDataSource.getRepository(Appointment).update(id, {
       meetingPhase: MeetingPhase.POST_SESSION,
       meetingEndedAt: now,
       status: AppointmentStatus.COMPLETED,
     });
 
     const updatedAppointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id },
+      where: { id },
     });
 
     const auditService = new AuditService();
     await auditService.log({
       userId: appointment.doctor.id,
-      action: 'session_ended',
-      entityType: 'Appointment',
-      entityId: params.id,
-      details: {
-        appointmentId: params.id,
-        startTime: appointment.startTime,
-        endTime: now,
-        sessionDuration: updatedAppointment?.meetingEndedAt
-          ? GoogleCalendarService.calculateSessionDuration(
-              appointment.startTime,
-              updatedAppointment.meetingEndedAt
-            )
-          : 0,
-      },
+      action: AuditAction.SESSION_ENDED,
+      resourceType: 'Appointment',
+      resourceId: id,
+      description: `Session ended successfully`,
+      oldValues: { meetingPhase: appointment.meetingPhase },
+      newValues: { meetingPhase: MeetingPhase.POST_SESSION, status: AppointmentStatus.COMPLETED },
     });
 
     return NextResponse.json({

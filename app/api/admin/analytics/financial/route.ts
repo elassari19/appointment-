@@ -3,7 +3,7 @@ import { analyticsService } from '@/lib/services/analytics.service';
 import { authenticateAdminAppRouter } from '@/lib/middleware/auth.middleware';
 
 export async function GET(req: NextRequest) {
-  const authResult = authenticateAdminAppRouter()(req);
+  const authResult = await authenticateAdminAppRouter()(req);
 
   if (authResult instanceof NextResponse) {
     return authResult;

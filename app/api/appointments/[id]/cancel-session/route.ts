@@ -3,18 +3,19 @@ import { AppDataSource } from '@/lib/database';
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
 import { User } from '@/lib/entities/User';
 import { MeetingPhase } from '@/lib/services/google-calendar.service';
-import { AuditService } from '@/lib/services/audit.service';
+import { AuditService, AuditAction } from '@/lib/services/audit.service';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const cancellationReason = body.reason || 'Session cancelled by user';
 
     const appointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id, status: AppointmentStatus.CONFIRMED },
+      where: { id, status: AppointmentStatus.CONFIRMED },
       relations: ['patient', 'doctor'],
     });
 
@@ -22,7 +23,7 @@ export async function POST(
       return NextResponse.json({ error: 'Appointment not found or not confirmed' }, { status: 404 });
     }
 
-    await AppDataSource.getRepository(Appointment).update(params.id, {
+    await AppDataSource.getRepository(Appointment).update(id, {
       status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancellationReason,
@@ -32,21 +33,18 @@ export async function POST(
     });
 
     const updatedAppointment = await AppDataSource.getRepository(Appointment).findOne({
-      where: { id: params.id },
+      where: { id },
     });
 
     const auditService = new AuditService();
     await auditService.log({
       userId: appointment.doctor.id,
-      action: 'session_cancelled',
-      entityType: 'Appointment',
-      entityId: params.id,
-      details: {
-        appointmentId: params.id,
-        reason: cancellationReason,
-        startTime: appointment.startTime,
-        cancelledAt: new Date(),
-      },
+      action: AuditAction.SESSION_CANCELLED,
+      resourceType: 'Appointment',
+      resourceId: id,
+      description: `Session cancelled: ${cancellationReason}`,
+      oldValues: { status: appointment.status },
+      newValues: { status: AppointmentStatus.CANCELLED, cancelledAt: new Date() },
     });
 
     return NextResponse.json({
