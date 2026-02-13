@@ -180,11 +180,11 @@ export class AppointmentService {
       .leftJoinAndSelect('appointment.doctor', 'doctor');
 
     if (filters.patientId) {
-      queryBuilder.andWhere('appointment.patient_id = :patientId', { patientId: filters.patientId });
+      queryBuilder.andWhere('appointment.patientId = :patientId', { patientId: filters.patientId });
     }
 
     if (filters.doctorId) {
-      queryBuilder.andWhere('appointment.doctor_id = :doctorId', { doctorId: filters.doctorId });
+      queryBuilder.andWhere('appointment.doctorId = :doctorId', { doctorId: filters.doctorId });
     }
 
     if (filters.status) {
@@ -364,6 +364,7 @@ export class AppointmentService {
   async getDoctors(filters?: { specialty?: string; search?: string }): Promise<User[]> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
+      .leftJoin('user.doctorProfile', 'doctorProfile')
       .where('user.role = :role', { role: UserRole.DOCTOR })
       .andWhere('user.isActive = :isActive', { isActive: true });
 
@@ -372,6 +373,10 @@ export class AppointmentService {
         '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
         { search: `%${filters.search}%` }
       );
+    }
+
+    if (filters?.specialty) {
+      queryBuilder.andWhere('doctorProfile.specialty ILIKE :specialty', { specialty: `%${filters.specialty}%` });
     }
 
     return await queryBuilder.getMany();
@@ -386,17 +391,18 @@ export class AppointmentService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
-      .where('appointment.patient_id = :patientId', { patientId });
+      .leftJoin('doctor.doctorProfile', 'doctorProfile')
+      .where('appointment.patientId = :patientId', { patientId });
 
     if (doctorName) {
       queryBuilder.andWhere(
-        '(doctor.first_name ILIKE :doctorName OR doctor.last_name ILIKE :doctorName)',
+        '(doctor.firstName ILIKE :doctorName OR doctor.lastName ILIKE :doctorName)',
         { doctorName: `%${doctorName}%` }
       );
     }
 
     if (specialty) {
-      queryBuilder.andWhere('doctor.specialty ILIKE :specialty', { specialty: `%${specialty}%` });
+      queryBuilder.andWhere('doctorProfile.specialty ILIKE :specialty', { specialty: `%${specialty}%` });
     }
 
     queryBuilder.orderBy('appointment.startTime', 'DESC');

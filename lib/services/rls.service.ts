@@ -59,7 +59,7 @@ export class RLSService {
   private canAccessAppointment(context: RLSContext): boolean {
     const { user } = context;
 
-    if (user.role === UserRole.ADMIN || user.role === UserRole.DIETITIAN) {
+    if (user.role === UserRole.ADMIN || user.role === UserRole.DOCTOR) {
       return true;
     }
 
@@ -77,7 +77,7 @@ export class RLSService {
       return true;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
+    if (user.role === UserRole.DOCTOR) {
       return !resourceOwnerId || resourceOwnerId === user.id;
     }
 
@@ -101,15 +101,15 @@ export class RLSService {
 
     const appointment = await this.appointmentRepository.findOne({
       where: { id: appointmentId },
-      relations: ['patient', 'dietitian'],
+      relations: ['patient', 'doctor'],
     });
 
     if (!appointment) {
       return false;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return appointment.dietitian?.id === user.id;
+    if (user.role === UserRole.DOCTOR) {
+      return appointment.doctor?.id === user.id;
     }
 
     if (user.role === UserRole.PATIENT) {
@@ -133,8 +133,8 @@ export class RLSService {
       return false;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return availability.dietitian?.id === user.id;
+    if (user.role === UserRole.DOCTOR) {
+      return availability.doctor?.id === user.id;
     }
 
     return false;
@@ -147,15 +147,15 @@ export class RLSService {
 
     const payment = await this.paymentRepository.findOne({
       where: { id: paymentId },
-      relations: ['appointment', 'appointment.patient', 'appointment.dietitian'],
+      relations: ['appointment', 'appointment.patient', 'appointment.doctor'],
     });
 
     if (!payment || !payment.appointment) {
       return false;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return payment.appointment.dietitian?.id === user.id;
+    if (user.role === UserRole.DOCTOR) {
+      return payment.appointment.doctor?.id === user.id;
     }
 
     if (user.role === UserRole.PATIENT) {
@@ -186,8 +186,8 @@ export class RLSService {
       return true;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return appointment.dietitian?.id === user.id;
+    if (user.role === UserRole.DOCTOR) {
+      return appointment.doctor?.id === user.id;
     }
 
     if (user.role === UserRole.PATIENT) {
@@ -202,8 +202,8 @@ export class RLSService {
       return true;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return availability.dietitian?.id === user.id;
+    if (user.role === UserRole.DOCTOR) {
+      return availability.doctor?.id === user.id;
     }
 
     return false;
@@ -214,7 +214,7 @@ export class RLSService {
   }
 
   filterAccessibleAppointments(user: User, appointments: Appointment[]): Appointment[] {
-    if (user.role === UserRole.ADMIN || user.role === UserRole.DIETITIAN) {
+    if (user.role === UserRole.ADMIN || user.role === UserRole.DOCTOR) {
       return appointments;
     }
 
@@ -226,8 +226,8 @@ export class RLSService {
       return availabilities;
     }
 
-    if (user.role === UserRole.DIETITIAN) {
-      return availabilities.filter((avail) => avail.dietitian?.id === user.id);
+    if (user.role === UserRole.DOCTOR) {
+      return availabilities.filter((avail) => avail.doctor?.id === user.id);
     }
 
     return [];
@@ -239,8 +239,8 @@ export class RLSService {
     }
 
     return payments.filter((pay) => {
-      if (user.role === UserRole.DIETITIAN) {
-        return pay.appointment?.dietitian?.id === user.id;
+      if (user.role === UserRole.DOCTOR) {
+        return pay.appointment?.doctor?.id === user.id;
       }
       if (user.role === UserRole.PATIENT) {
         return pay.appointment?.patient?.id === user.id;

@@ -73,8 +73,8 @@ export class SaudiPaymentGateway {
 
   private readonly GATEWAY_URL = process.env.SAUDI_PAYMENT_GATEWAY_URL || 'https://api.mada.com.sa/v1';
   private readonly API_KEY = process.env.SAUDI_PAYMENT_API_KEY || '';
-  private readonly TERMINAL_ID = process.env.PAYMENT_TERMINAL_ID || '';
-  private readonly MERCHANT_ID = process.env.PAYMENT_MERCHANT_ID || '';
+  private readonly TERMINALId = process.env.PAYMENT_TERMINALId || '';
+  private readonly MERCHANTId = process.env.PAYMENT_MERCHANTId || '';
 
   async processPayment(request: SaudiPaymentRequest): Promise<SaudiPaymentResponse> {
     const appointment = await this.appointmentRepository.findOne({
@@ -146,8 +146,8 @@ export class SaudiPaymentGateway {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.API_KEY}`,
-          'X-Terminal-ID': this.TERMINAL_ID,
-          'X-Merchant-ID': this.MERCHANT_ID,
+          'X-Terminal-ID': this.TERMINALId,
+          'X-Merchant-ID': this.MERCHANTId,
         },
         body: JSON.stringify(payload),
       });
@@ -197,8 +197,8 @@ export class SaudiPaymentGateway {
       amount: Math.round(request.amount * 100),
       currency: request.currency || 'SAR',
       reference: request.appointmentId,
-      terminalId: this.TERMINAL_ID,
-      merchantId: this.MERCHANT_ID,
+      terminalId: this.TERMINALId,
+      merchantId: this.MERCHANTId,
     };
   }
 

@@ -18,7 +18,7 @@ export function withRLS(
       return authResult;
     }
 
-    const { user } = authResult as { user: User };
+    const { user } = authResult;
     const resourceId = req.nextUrl.searchParams.get('id') || undefined;
     const resourceOwnerId = req.nextUrl.searchParams.get('ownerId') || undefined;
 
@@ -52,7 +52,7 @@ export function withAppointmentRLS(
                          authenticatePatientAppRouter;
 
   return async (req: NextRequest) => {
-    const authResult = await authMiddleware(req);
+    const authResult = await authMiddleware()(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -86,12 +86,12 @@ export function withAvailabilityRLS(
   handler: (req: AuthenticatedRequest) => Promise<NextResponse>
 ) {
   return async (req: NextRequest) => {
-    const authResult = await authenticateDietitianAppRouter(req);
+    const authResult = await authenticateDietitianAppRouter()(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
 
-    const { user } = authResult as { user: User };
+    const { user } = authResult;
     const availabilityId = req.nextUrl.searchParams.get('id');
 
     if (!availabilityId) {
@@ -120,12 +120,12 @@ export function withPaymentRLS(
   handler: (req: AuthenticatedRequest) => Promise<NextResponse>
 ) {
   return async (req: NextRequest) => {
-    const authResult = await authenticatePatientAppRouter(req);
+    const authResult = await authenticatePatientAppRouter()(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
 
-    const { user } = authResult as { user: User };
+    const { user } = authResult;
     const paymentId = req.nextUrl.searchParams.get('id');
 
     if (!paymentId) {

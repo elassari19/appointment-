@@ -27,7 +27,11 @@ export class GoogleMeetService {
 
   constructor(tokens?: { accessToken: string; refreshToken?: string; expiresAt?: Date }) {
     if (tokens) {
-      this.calendarService = new GoogleCalendarService(tokens);
+      this.calendarService = new GoogleCalendarService({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt || new Date(Date.now() + 3600 * 1000),
+      });
     } else {
       this.calendarService = new GoogleCalendarService();
     }

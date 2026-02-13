@@ -115,7 +115,7 @@ export class GoogleCalendarService {
 
   private getAuthUrl(clientId: string, redirectUri: string, scopes: string[]): string {
     const params = new URLSearchParams({
-      client_id: clientId,
+      clientId: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: scopes.join(' '),
@@ -146,7 +146,7 @@ export class GoogleCalendarService {
       },
       body: new URLSearchParams({
         code,
-        client_id: clientId,
+        clientId: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: 'authorization_code',

@@ -159,7 +159,7 @@ export class RecurringAppointmentService {
     if (updateAllFollowing) {
       const followingAppointments = await this.appointmentRepository
         .createQueryBuilder('appointment')
-        .where('appointment.recurring_series_id = :seriesId', {
+        .where('appointment.recurring_seriesId = :seriesId', {
           seriesId: appointment.recurringSeriesId,
         })
         .andWhere('appointment.start_time > :startTime', {
@@ -193,7 +193,7 @@ export class RecurringAppointmentService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
-      .where('(appointment.patient_id = :userId OR appointment.doctor_id = :userId)', {
+      .where('(appointment.patientId = :userId OR appointment.doctorId = :userId)', {
         userId,
       })
       .andWhere('appointment.is_recurring = :isRecurring', { isRecurring: true })

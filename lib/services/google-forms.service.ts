@@ -130,16 +130,16 @@ export class GoogleFormsService {
   }
 
   async createFormUrl(doctorId: string, patientId: string): Promise<string> {
-    const baseFormUrl = process.env.GOOGLE_FORM_BASE_URL || 'https://docs.google.com/forms/d/e/FORM_ID/viewform';
-    const formId = process.env.PATIENT_INTAKE_FORM_ID || 'default_form';
+    const baseFormUrl = process.env.GOOGLE_FORM_BASE_URL || 'https://docs.google.com/forms/d/e/FORMId/viewform';
+    const formId = process.env.PATIENT_INTAKE_FORMId || 'default_form';
 
     const params = new URLSearchParams({
       usp: 'pp_url',
-      entry_doctor_id: doctorId,
-      entry_patient_id: patientId,
+      entry_doctorId: doctorId,
+      entry_patientId: patientId,
     });
 
-    return baseFormUrl.replace('FORM_ID', formId) + '?' + params.toString();
+    return baseFormUrl.replace('FORMId', formId) + '?' + params.toString();
   }
 
   async getFormAnalytics(formId: string): Promise<{
