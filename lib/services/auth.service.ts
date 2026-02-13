@@ -120,6 +120,7 @@ export class AuthService {
   }
 
   async getUserBySessionToken(token: string): Promise<User | null> {
+    console.log('token-:', token)
     const session = await this.sessionRepository.findOne({
       where: { token, isActive: true },
     });
