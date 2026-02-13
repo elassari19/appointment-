@@ -3,6 +3,8 @@ import { AppointmentService, AppointmentFilters } from '@/lib/services/appointme
 import { DatabaseService } from '@/lib/services/database.service';
 import { AuthService } from '@/lib/services/auth.service';
 import { AppointmentStatus } from '@/lib/entities/Appointment';
+import { User, UserRole } from '@/lib/entities/User';
+import { AppDataSource } from '@/lib/database';
 import { z } from 'zod';
 
 const appointmentService = new AppointmentService();
@@ -15,7 +17,7 @@ const createAppointmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-async function getUserFromRequest(request: NextRequest): Promise<{ userId: string } | null> {
+async function getUserFromRequest(request: NextRequest): Promise<{ userId: string; role: string } | null> {
   const token = request.cookies.get('session_token')?.value ||
     request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -28,7 +30,15 @@ async function getUserFromRequest(request: NextRequest): Promise<{ userId: strin
     return null;
   }
 
-  return { userId: user.id };
+  return { userId: user.id, role: String(user.role) };
+}
+
+async function isDoctor(userId: string): Promise<boolean> {
+  const profile = await AppDataSource.query(
+    'SELECT id FROM "DoctorProfiles" WHERE "userId" = $1',
+    [userId]
+  );
+  return profile.length > 0;
 }
 
 export async function GET(request: NextRequest) {
@@ -57,55 +67,79 @@ export async function GET(request: NextRequest) {
       filters.endDate = new Date(endDate);
     }
 
-    const appointments = await appointmentService.getAppointments({
-      ...filters,
-      patientId: userResult.userId,
-    });
+    const userIsDoctor = await isDoctor(userResult.userId);
 
-    // Format appointments with doctor profile details
-    const formattedAppointments = appointments.map(apt => ({
-      id: apt.id,
-      startTime: apt.startTime,
-      duration: apt.duration,
-      status: apt.status,
-      notes: apt.notes,
-      meetingLink: apt.meetingLink,
-      doctor: apt.doctor ? {
-        id: apt.doctor.id,
-        firstName: apt.doctor.firstName,
-        lastName: apt.doctor.lastName,
-        email: apt.doctor.email,
-        phone: apt.doctor.phone,
-        profilePicture: apt.doctor.profilePicture,
-        bio: apt.doctor.bio,
-        profile: apt.doctor.doctorProfile ? {
-          specialty: apt.doctor.doctorProfile.specialty,
-          subSpecialties: apt.doctor.doctorProfile.subSpecialties,
-          yearsOfExperience: apt.doctor.doctorProfile.yearsOfExperience,
-          medicalSchool: apt.doctor.doctorProfile.medicalSchool,
-          residency: apt.doctor.doctorProfile.residency,
-          fellowship: apt.doctor.doctorProfile.fellowship,
-          boardCertifications: apt.doctor.doctorProfile.boardCertifications,
-          clinicName: apt.doctor.doctorProfile.clinicName,
-          clinicAddress: apt.doctor.doctorProfile.clinicAddress,
-          clinicPhone: apt.doctor.doctorProfile.clinicPhone,
-          consultationFee: apt.doctor.doctorProfile.consultationFee,
-          telemedicineEnabled: apt.doctor.doctorProfile.telemedicineEnabled,
-          acceptingNewPatients: apt.doctor.doctorProfile.acceptingNewPatients,
-          professionalSummary: apt.doctor.doctorProfile.professionalSummary,
-          education: apt.doctor.doctorProfile.education,
-          languages: apt.doctor.doctorProfile.languages,
-          awards: apt.doctor.doctorProfile.awards,
-          professionalMemberships: apt.doctor.doctorProfile.professionalMemberships,
-          websiteUrl: apt.doctor.doctorProfile.websiteUrl,
-          linkedInUrl: apt.doctor.doctorProfile.linkedInUrl,
-          twitterUrl: apt.doctor.doctorProfile.twitterUrl,
-          instagramUrl: apt.doctor.doctorProfile.instagramUrl,
-          totalPatients: apt.doctor.doctorProfile.totalPatients,
-          totalAppointments: apt.doctor.doctorProfile.totalAppointments,
+    if (userIsDoctor) {
+      filters.doctorId = userResult.userId;
+    } else {
+      filters.patientId = userResult.userId;
+    }
+
+    const appointments = await appointmentService.getAppointments(filters);
+
+    const formattedAppointments = appointments.map(apt => {
+      const baseData = {
+        id: apt.id,
+        startTime: apt.startTime,
+        duration: apt.duration,
+        status: apt.status,
+        notes: apt.notes,
+        meetingLink: apt.meetingLink,
+      };
+
+      if (userIsDoctor) {
+        return {
+          ...baseData,
+          patient: apt.patient ? {
+            id: apt.patient.id,
+            firstName: apt.patient.firstName,
+            lastName: apt.patient.lastName,
+            email: apt.patient.email,
+            phone: apt.patient.phone,
+            profilePicture: apt.patient.profilePicture,
+          } : null,
+        };
+      }
+
+      return {
+        ...baseData,
+        doctor: apt.doctor ? {
+          id: apt.doctor.id,
+          firstName: apt.doctor.firstName,
+          lastName: apt.doctor.lastName,
+          email: apt.doctor.email,
+          phone: apt.doctor.phone,
+          profilePicture: apt.doctor.profilePicture,
+          bio: apt.doctor.bio,
+          profile: apt.doctor.doctorProfile ? {
+            specialty: apt.doctor.doctorProfile.specialty,
+            subSpecialties: apt.doctor.doctorProfile.subSpecialties,
+            yearsOfExperience: apt.doctor.doctorProfile.yearsOfExperience,
+            medicalSchool: apt.doctor.doctorProfile.medicalSchool,
+            residency: apt.doctor.doctorProfile.residency,
+            fellowship: apt.doctor.doctorProfile.fellowship,
+            boardCertifications: apt.doctor.doctorProfile.boardCertifications,
+            clinicName: apt.doctor.doctorProfile.clinicName,
+            clinicAddress: apt.doctor.doctorProfile.clinicAddress,
+            clinicPhone: apt.doctor.doctorProfile.clinicPhone,
+            consultationFee: apt.doctor.doctorProfile.consultationFee,
+            telemedicineEnabled: apt.doctor.doctorProfile.telemedicineEnabled,
+            acceptingNewPatients: apt.doctor.doctorProfile.acceptingNewPatients,
+            professionalSummary: apt.doctor.doctorProfile.professionalSummary,
+            education: apt.doctor.doctorProfile.education,
+            languages: apt.doctor.doctorProfile.languages,
+            awards: apt.doctor.doctorProfile.awards,
+            professionalMemberships: apt.doctor.doctorProfile.professionalMemberships,
+            websiteUrl: apt.doctor.doctorProfile.websiteUrl,
+            linkedInUrl: apt.doctor.doctorProfile.linkedInUrl,
+            twitterUrl: apt.doctor.doctorProfile.twitterUrl,
+            instagramUrl: apt.doctor.doctorProfile.instagramUrl,
+            totalPatients: apt.doctor.doctorProfile.totalPatients,
+            totalAppointments: apt.doctor.doctorProfile.totalAppointments,
+          } : null,
         } : null,
-      } : null,
-    }));
+      };
+    });
 
     return Response.json({ appointments: formattedAppointments });
   } catch (error) {

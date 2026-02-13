@@ -1,9 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Users, Clock, TrendingUp, Activity, MoreHorizontal, Search, Bell, Loader2 } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Calendar, Users, Clock, TrendingUp, Activity, MoreHorizontal, Loader2, Check, X, ChevronLeft, ChevronRight, Video, MapPin, User, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { AppointmentStatus } from '@/lib/entities/Appointment'
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 
 interface DashboardData {
   stats: {
@@ -40,25 +58,132 @@ export default function DietitianDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<typeof upcomingAppointments[0] | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [actionType, setActionType] = useState<'confirm' | 'decline' | 'complete'>('confirm');
+  const [cancelReason, setCancelReason] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview');
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(now.setDate(diff));
+  });
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/doctors/dashboard');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch('/api/doctors/dashboard');
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  const handleAppointmentAction = async () => {
+    if (!selectedAppointment) return;
+    
+    setIsProcessing(true);
+    try {
+      let status: AppointmentStatus;
+      
+      if (actionType === 'confirm') {
+        status = AppointmentStatus.CONFIRMED;
+      } else if (actionType === 'decline') {
+        status = AppointmentStatus.CANCELLED;
+      } else if (actionType === 'complete') {
+        status = AppointmentStatus.COMPLETED;
+      } else {
+        status = AppointmentStatus.SCHEDULED;
+      }
+
+      const response = await fetch(`/api/appointments/${selectedAppointment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status,
+          reason: actionType === 'decline' ? cancelReason : undefined 
+        }),
+      });
+
+      if (response.ok) {
+        setIsSheetOpen(false);
+        setSelectedAppointment(null);
+        setCancelReason('');
+        fetchDashboardData();
+      } else {
+        setError('Failed to update appointment');
+      }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const openActionSheet = (appointment: typeof upcomingAppointments[0], action: 'confirm' | 'decline' | 'complete') => {
+    setSelectedAppointment(appointment);
+    setActionType(action);
+    setCancelReason('');
+    setIsSheetOpen(true);
+  };
+
+  const getWeekDays = () => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(currentWeekStart);
+      day.setDate(currentWeekStart.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  };
+
+  const formatWeekRange = () => {
+    const days = getWeekDays();
+    const start = days[0];
+    const end = days[6];
+    const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
+    const year = start.getFullYear();
+    if (startMonth === endMonth) {
+      return `${startMonth} ${start.getDate()} - ${end.getDate()}, ${year}`;
+    }
+    return `${startMonth} ${start.getDate()} - ${endMonth} ${end.getDate()}, ${year}`;
+  };
+
+  const navigateWeek = (direction: number) => {
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() + direction * 7);
+    setCurrentWeekStart(newDate);
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const getAppointmentsForDay = (date: Date) => {
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return upcomingAppointments.filter(appt => {
+      const apptDate = new Date(appt.date);
+      return apptDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const timeSlots = [
+    '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+    '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM'
+  ];
 
   const stats = data ? [
     {
@@ -118,38 +243,39 @@ export default function DietitianDashboardPage() {
   }
 
   return (
-    <div className="p-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, Doctor</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Here&apos;s your schedule and patient updates for today.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search patients..."
-              className="pl-10 pr-4 py-2 bg-card border border-border rounded-xl w-64 outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-            />
-          </div>
-          <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-          </Button>
-          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center font-bold text-primary-foreground">D</div>
-        </div>
-      </header>
+    <div className="p-3 sm:p-8">
+      <DashboardHeader
+        title="Welcome back, Doctor"
+        subtitle="Here's your schedule and patient updates for today."
+        searchPlaceholder="Search patients..."
+      />
 
       <div className="flex gap-4 mb-8 border-b border-border">
-        <div className="px-4 py-3 text-sm font-medium border-b-2 border-primary text-primary flex items-center">
+        <div 
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center cursor-pointer transition-colors ${
+            activeTab === 'overview' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
           <Activity className="h-4 w-4 mr-2" /> Overview
         </div>
-        <div className="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center cursor-pointer">
+        <div 
+          onClick={() => setActiveTab('schedule')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center cursor-pointer transition-colors ${
+            activeTab === 'schedule' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
           <Calendar className="h-4 w-4 mr-2" /> Schedule
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {activeTab === 'overview' && (
+        <div className="overview-content">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => (
           <div key={stat.title} className="bg-card p-6 rounded-3xl border border-border/60 shadow-sm transition-transform hover:-translate-y-1">
             <div className="flex justify-between items-start mb-4">
@@ -314,9 +440,31 @@ export default function DietitianDashboardPage() {
                         </span>
                       </td>
                       <td className="py-4 text-right">
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-64 rounded-xl border-2 border-gray-200 bg-white p-2 shadow-lg">
+                            {appt.status === 'Scheduled' && (
+                              <DropdownMenuItem onClick={() => openActionSheet(appt, 'confirm')} className="rounded-lg px-3 py-2.5 text-base text-emerald-500 font-semibold cursor-pointer">
+                                <Check className="h-5 w-5 mr-3" />
+                                Confirm Appointment
+                              </DropdownMenuItem>
+                            )}
+                            {appt.status === 'Confirmed' && (
+                              <DropdownMenuItem onClick={() => openActionSheet(appt, 'complete')} className="rounded-lg px-3 py-2.5 text-base text-green-500 font-semibold cursor-pointer">
+                                <Check className="h-5 w-5 mr-3" />
+                                Mark as Complete
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => openActionSheet(appt, 'decline')} className="rounded-lg px-3 py-2.5 text-base font-semibold text-red-500 focus:text-red-500 cursor-pointer">
+                              <X className="h-5 w-5 mr-3" />
+                              Cancel Appointment
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -328,6 +476,239 @@ export default function DietitianDashboardPage() {
           </div>
         </div>
       </div>
+      </div>
+      )}
+
+      {activeTab === 'schedule' && (
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Weekly Calendar */}
+          <div className="flex-1 bg-white rounded-2xl border border-yellow-200 shadow-sm">
+            {/* Calendar Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-yellow-100">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <h2 className="text-lg sm:text-2xl font-extrabold text-gray-900">{formatWeekRange()}</h2>
+                <div className="flex items-center bg-white rounded-lg border border-yellow-200 shadow-sm">
+                  <button onClick={() => navigateWeek(-1)} className="p-2 hover:bg-yellow-50 rounded-l-lg transition-colors">
+                    <ChevronLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button onClick={() => setCurrentWeekStart(new Date())} className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-x border-yellow-100 hover:bg-yellow-50 transition-colors">
+                    Today
+                  </button>
+                  <button onClick={() => navigateWeek(1)} className="p-2 hover:bg-yellow-50 rounded-r-lg transition-colors">
+                    <ChevronRight className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Calendar Grid - Hidden on mobile, simplified view */}
+            <div className="flex flex-col xl:flex-row w-screen sm:w-3xl overflow-x-auto">
+              <div className="grid min-w-5xl" style={{ gridTemplateColumns: '80px repeat(7, 1fr)' }}>
+                {/* Days Header */}
+                <div className="p-4 border-r border-b border-yellow-100 bg-gray-50/50"></div>
+                {getWeekDays().map((day, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`p-4 text-center border-r border-b border-yellow-100 ${
+                      isToday(day) ? 'bg-yellow-50' : ''
+                    }`}
+                  >
+                    <span className="block text-[10px] font-bold text-yellow-600 uppercase tracking-widest">
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </span>
+                    <span className={`text-lg font-extrabold ${isToday(day) ? 'text-yellow-600' : 'text-gray-900'}`}>
+                      {day.getDate()}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Time Grid */}
+                <div className="border-r border-yellow-100 bg-gray-50/30">
+                  {timeSlots.map((time, idx) => (
+                    <div key={idx} className="px-2 py-6 text-xs font-bold text-gray-700 text-nowrap border-b border-yellow-100">
+                      {time}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Day Columns */}
+                {getWeekDays().map((day, dayIdx) => {
+                  const dayAppointments = getAppointmentsForDay(day);
+                  return (
+                    <div key={dayIdx} className={`relative border-r border-yellow-100 ${isToday(day) ? 'bg-yellow-50/30' : ''}`}>
+                      {timeSlots.map((_, timeIdx) => (
+                        <div key={timeIdx} className="border-b border-yellow-100/50 h-16"></div>
+                      ))}
+                      {dayAppointments.map((appt) => {
+                        const hour = parseInt(appt.time.split(':')[0]);
+                        const minute = appt.time.includes(':30') ? 30 : 0;
+                        const top = ((hour - 8) * 64) + (minute / 60 * 64);
+                        return (
+                          <div
+                            key={appt.id}
+                            onClick={() => openActionSheet(appt, appt.status === 'Scheduled' ? 'confirm' : 'complete')}
+                            className={`absolute left-1 right-1 rounded-lg p-2 cursor-pointer transition-all hover:shadow-md ${
+                              appt.status === 'Confirmed' 
+                                ? 'bg-yellow-100 border-l-4 border-yellow-500' 
+                                : 'bg-emerald-100 border-l-4 border-emerald-500'
+                            }`}
+                            style={{ top: `${top}px`, height: '60px' }}
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="text-[10px] font-bold text-gray-700">{appt.time}</span>
+                              {appt.type.toLowerCase().includes('video') && (
+                                <Video className="w-3 h-3 text-gray-500" />
+                              )}
+                            </div>
+                            <div className="text-xs font-extrabold text-gray-900 truncate mt-1">{appt.patient}</div>
+                            <div className="text-[10px] font-medium text-gray-600 truncate">{appt.type}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar - Today's Agenda */}
+          <aside className="w-full lg:w-96 bg-white rounded-2xl border border-yellow-200 shadow-sm overflow-hidden flex flex-col max-h-[500px] lg:max-h-none">
+            <div className="p-4 sm:p-6 border-b border-yellow-100 shrink-0">
+              <h2 className="text-lg sm:text-xl font-extrabold mb-1">Today&apos;s Agenda</h2>
+              <p className="text-sm text-gray-500 font-medium">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} • {upcomingAppointments.filter(a => isToday(new Date(a.date))).length} Appointments
+              </p>
+            </div>
+            <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+              {upcomingAppointments.filter(a => isToday(new Date(a.date))).length > 0 ? (
+                upcomingAppointments
+                  .filter(a => isToday(new Date(a.date)))
+                  .map((appt) => (
+                    <div 
+                      key={appt.id}
+                      onClick={() => openActionSheet(appt, appt.status === 'Scheduled' ? 'confirm' : 'complete')}
+                      className="group cursor-pointer bg-white border border-yellow-100 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-300"
+                    >
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
+                        <div className="flex gap-3">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${
+                            appt.type.toLowerCase().includes('video') ? 'bg-blue-50' : 'bg-yellow-50'
+                          }`}>
+                            {appt.type.toLowerCase().includes('video') ? (
+                              <Video className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                            ) : (
+                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm">{appt.patient}</h4>
+                            <p className="text-[10px] sm:text-[11px] font-bold text-yellow-600 uppercase">{appt.type}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-md text-[10px] font-black shrink-0 ${
+                          appt.status === 'Confirmed' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {appt.status.toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold text-gray-500 border-t border-gray-50 pt-2 sm:pt-3">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 sm:w-4 sm:h-4" /> {appt.time}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Timer className="w-3 h-3 sm:w-4 sm:h-4" /> 45 min
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <p className="text-gray-500 text-center py-8">No appointments scheduled for today</p>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="sm:max-w-lg border-2 border-gray-200 bg-white p-6">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-xl font-bold text-gray-900">
+              {actionType === 'confirm' && 'Confirm Appointment'}
+              {actionType === 'decline' && 'Cancel Appointment'}
+              {actionType === 'complete' && 'Complete Appointment'}
+            </SheetTitle>
+            <SheetDescription className="text-base text-gray-600">
+              {actionType === 'confirm' && `Are you sure you want to confirm the appointment with ${selectedAppointment?.patient}?`}
+              {actionType === 'decline' && `Are you sure you want to cancel the appointment with ${selectedAppointment?.patient}?`}
+              {actionType === 'complete' && `Mark the appointment with ${selectedAppointment?.patient} as completed?`}
+            </SheetDescription>
+          </SheetHeader>
+          
+          {actionType === 'decline' && (
+            <div className="py-4">
+              <Label htmlFor="reason" className="text-base font-semibold text-gray-800">Reason for cancellation (optional)</Label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reason..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="mt-3 rounded-xl border-gray-300 text-base"
+                rows={4}
+              />
+            </div>
+          )}
+
+          {actionType === 'complete' && (
+            <div className="py-6 text-base text-gray-600 bg-green-50 rounded-xl px-4">
+              <p>This will mark the appointment as completed. The patient will be notified of the completion.</p>
+            </div>
+          )}
+          
+          <SheetFooter className="mt-6 gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSheetOpen(false)} 
+              disabled={isProcessing}
+              className="flex-1 rounded-xl h-16 text-base font-semibold border-2 border-gray-300 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+            {actionType === 'confirm' && (
+              <Button 
+                onClick={handleAppointmentAction} 
+                disabled={isProcessing} 
+                className="flex-1 rounded-xl h-16 text-base font-bold bg-emerald-500 hover:bg-emerald-600"
+              >
+                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}
+                Confirm
+              </Button>
+            )}
+            {actionType === 'decline' && (
+              <Button 
+                onClick={handleAppointmentAction} 
+                disabled={isProcessing}
+                className="flex-1 rounded-xl h-16 text-base font-bold bg-red-500 hover:bg-red-600" 
+              >
+                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <X className="h-5 w-5 mr-2" />}
+                Decline
+              </Button>
+            )}
+            {actionType === 'complete' && (
+              <Button 
+                onClick={handleAppointmentAction} 
+                disabled={isProcessing}
+                className="flex-1 rounded-xl h-16 text-base font-bold bg-green-500 hover:bg-green-600"
+              >
+                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}
+                Mark Complete
+              </Button>
+            )}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
