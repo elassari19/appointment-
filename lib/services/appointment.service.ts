@@ -177,7 +177,8 @@ export class AppointmentService {
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
-      .leftJoinAndSelect('appointment.doctor', 'doctor');
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.doctorProfile', 'doctorProfile');
 
     if (filters.patientId) {
       queryBuilder.andWhere('appointment.patientId = :patientId', { patientId: filters.patientId });

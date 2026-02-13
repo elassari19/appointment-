@@ -62,7 +62,52 @@ export async function GET(request: NextRequest) {
       patientId: userResult.userId,
     });
 
-    return Response.json({ appointments });
+    // Format appointments with doctor profile details
+    const formattedAppointments = appointments.map(apt => ({
+      id: apt.id,
+      startTime: apt.startTime,
+      duration: apt.duration,
+      status: apt.status,
+      notes: apt.notes,
+      meetingLink: apt.meetingLink,
+      doctor: apt.doctor ? {
+        id: apt.doctor.id,
+        firstName: apt.doctor.firstName,
+        lastName: apt.doctor.lastName,
+        email: apt.doctor.email,
+        phone: apt.doctor.phone,
+        profilePicture: apt.doctor.profilePicture,
+        bio: apt.doctor.bio,
+        profile: apt.doctor.doctorProfile ? {
+          specialty: apt.doctor.doctorProfile.specialty,
+          subSpecialties: apt.doctor.doctorProfile.subSpecialties,
+          yearsOfExperience: apt.doctor.doctorProfile.yearsOfExperience,
+          medicalSchool: apt.doctor.doctorProfile.medicalSchool,
+          residency: apt.doctor.doctorProfile.residency,
+          fellowship: apt.doctor.doctorProfile.fellowship,
+          boardCertifications: apt.doctor.doctorProfile.boardCertifications,
+          clinicName: apt.doctor.doctorProfile.clinicName,
+          clinicAddress: apt.doctor.doctorProfile.clinicAddress,
+          clinicPhone: apt.doctor.doctorProfile.clinicPhone,
+          consultationFee: apt.doctor.doctorProfile.consultationFee,
+          telemedicineEnabled: apt.doctor.doctorProfile.telemedicineEnabled,
+          acceptingNewPatients: apt.doctor.doctorProfile.acceptingNewPatients,
+          professionalSummary: apt.doctor.doctorProfile.professionalSummary,
+          education: apt.doctor.doctorProfile.education,
+          languages: apt.doctor.doctorProfile.languages,
+          awards: apt.doctor.doctorProfile.awards,
+          professionalMemberships: apt.doctor.doctorProfile.professionalMemberships,
+          websiteUrl: apt.doctor.doctorProfile.websiteUrl,
+          linkedInUrl: apt.doctor.doctorProfile.linkedInUrl,
+          twitterUrl: apt.doctor.doctorProfile.twitterUrl,
+          instagramUrl: apt.doctor.doctorProfile.instagramUrl,
+          totalPatients: apt.doctor.doctorProfile.totalPatients,
+          totalAppointments: apt.doctor.doctorProfile.totalAppointments,
+        } : null,
+      } : null,
+    }));
+
+    return Response.json({ appointments: formattedAppointments });
   } catch (error) {
     console.error('Get appointments error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
