@@ -4,6 +4,7 @@ import type {Locale} from '@/contexts/LocaleContext';
 import Header from '@/components/header';
 import BackgroundShapes from '@/components/BackgroundShapes';
 import { cookies } from 'next/headers';
+import Footer from '@/components/Footer';
   
 export default async function BrowserLayout({
   children,
@@ -22,6 +23,7 @@ export default async function BrowserLayout({
           <div>
             {children}
           </div>
+          <Footer />
         </AuthProvider>
       </LocaleProvider>
     </>

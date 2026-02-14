@@ -31,6 +31,7 @@ const mainNav: NavItem[] = [
   { title: "Profile", url: "/admin/profile", icon: "person", roles: ["admin"] },
   { title: "Profile", url: "/doctors/profile", icon: "person", roles: ["doctor"] },
   { title: "Profile", url: "/patient/profile", icon: "person", roles: ["patient"] },
+  { title: "About Us", url: "/about", icon: "info", roles: ["admin", "doctor", "patient"] },
 ];
 
 const managementNav: NavItem[] = [

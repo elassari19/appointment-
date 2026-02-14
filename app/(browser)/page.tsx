@@ -5,7 +5,6 @@ import HeroSection from '@/components/sections/HeroSection';
 import ServicesSection from '@/components/sections/ServicesSection';
 import KeyServicesSection from '@/components/sections/KeyServicesSection';
 import TechnologySection from '@/components/sections/TechnologySection';
-import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   const {t} = useLocale();
@@ -25,7 +24,6 @@ export default function LandingPage() {
         <KeyServicesSection />
         <TechnologySection />
       </main>
-      <Footer />
     </div>
   );
 }
