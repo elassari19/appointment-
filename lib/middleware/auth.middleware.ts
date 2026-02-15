@@ -2,8 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { UserRole, User } from '@/lib/entities/User';
+import { AppDataSource } from '@/lib/database';
 
 const authService = new AuthService();
+
+async function ensureDatabase() {
+  if (!AppDataSource.isInitialized) {
+    await AppDataSource.initialize();
+  }
+}
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: User;
@@ -45,6 +52,8 @@ export const authenticateAdmin = (handler: (req: AuthenticatedRequest, res: Next
 export const authenticateUserAppRouter = 
   (requiredRoles?: UserRole[]) =>
   async (req: NextRequest) => {
+    await ensureDatabase();
+    
     const token = req.cookies.get('session_token')?.value || 
                   req.headers.get('authorization')?.replace('Bearer ', '');
 

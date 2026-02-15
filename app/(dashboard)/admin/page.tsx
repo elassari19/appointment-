@@ -2,13 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import MonitoringDashboard from '@/components/admin/MonitoringDashboard';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface AnalyticsData {
-  totalUsers: { patients: number; dietitians: number; admins: number; total: number };
+  totalUsers: { patients: number; doctors: number; admins: number; total: number };
   appointments: { today: number; week: number; month: number; pending: number; confirmed: number; completed: number; cancelled: number; totalRevenue: number };
   revenue: { totalRevenue: number; monthlyRevenue: number; weeklyRevenue: number; dailyRevenue: number };
   activeUsers: { today: number; week: number; month: number };
   growthMetrics: { newPatientsLastMonth: number; newDietitiansLastMonth: number; monthOverMonthGrowth: number };
+  recentActivity: Array<{ action: string; detail: string; time: string; icon: string; color: string }>;
+  staffMembers: Array<{ id: string; name: string; email: string; specialty: string; status: string; dateJoined: string; avatar: string }>;
+  weeklyDistribution: Array<{ day: string; count: number; color: string }>;
+  trendData: Array<{ date: string; count: number }>;
 }
 
 function formatNumber(num?: number): string {
@@ -29,32 +35,59 @@ function calculateChange(current: number, previous: number): string {
   return (change >= 0 ? '+' : '') + change.toFixed(0) + '%';
 }
 
+function generateChartPath(data: { date: string; count: number }[], width = 800, height = 200, padding = 10): { path: string; areaPath: string; points: { x: number; y: number }[] } {
+  if (!data || data.length === 0) {
+    return { path: '', areaPath: '', points: [] };
+  }
+
+  const maxCount = Math.max(...data.map(d => d.count), 1);
+  const minCount = 0;
+  const range = maxCount - minCount || 1;
+  
+  const stepX = (width - padding * 2) / (data.length - 1);
+  
+  const points = data.map((d, i) => ({
+    x: padding + i * stepX,
+    y: height - padding - ((d.count - minCount) / range) * (height - padding * 2)
+  }));
+
+  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `${path} V${height - padding} H${padding} Z`;
+
+  return { path, areaPath, points };
+}
+
+function getMonthLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short' });
+}
+
 const recentActivity = [
   { action: 'New patient registered', detail: 'Sarah Johnson joined the platform', time: '09:30 AM', icon: 'person_add', color: 'primary' },
   { action: 'Appointment Confirmed', detail: 'Dr. Mitchell confirmed appointment #4402', time: '10:15 AM', icon: 'check_circle', color: 'emerald' },
   { action: 'Security Audit', detail: 'Admin performed routine data backup', time: '11:00 AM', icon: 'shield', color: 'amber' },
 ];
 
-const staffMembers = [
+const defaultStaffMembers = [
   { name: 'Dr. Emily Chen', email: 'emily.c@medicare.com', specialty: 'Pediatrician', status: 'Active', dateJoined: 'Jan 12, 2024', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
   { name: 'Dr. James Wilson', email: 'j.wilson@medicare.com', specialty: 'Neurologist', status: 'On Leave', dateJoined: 'Feb 02, 2024', avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face' },
 ];
 
-const filterPills = [
+const defaultFilterPills = [
   { label: 'Pending', percent: '15%', active: false, color: 'dark' },
   { label: 'Confirmed', percent: '72%', active: true, color: 'primary' },
   { label: 'Completed', percent: '60%', active: false, color: 'default' },
   { label: 'Cancelled', percent: '8%', active: false, color: 'default' },
 ];
 
-const weekDays = [
-  { day: 'Mon', height: 64, color: 'dark' },
-  { day: 'Tue', height: 70, color: 'primary' },
-  { day: 'Wed', height: 80, color: 'dark' },
-  { day: 'Thu', height: 90, color: 'primary' },
-  { day: 'Fri', height: 96, color: 'dark' },
-  { day: 'Sat', height: 48, color: 'primary' },
-  { day: 'Sun', height: 32, color: 'dark' },
+const defaultWeekDays = [
+  { day: 'Mon', count: 10, height: 64, color: 'dark' },
+  { day: 'Tue', count: 15, height: 70, color: 'primary' },
+  { day: 'Wed', count: 12, height: 80, color: 'dark' },
+  { day: 'Thu', count: 18, height: 90, color: 'primary' },
+  { day: 'Fri', count: 20, height: 96, color: 'dark' },
+  { day: 'Sat', count: 8, height: 48, color: 'primary' },
+  { day: 'Sun', count: 5, height: 32, color: 'dark' },
 ];
 
 const getStatusColor = (status: string) => {
@@ -82,6 +115,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'monitoring'>('overview');
+  const [chartView, setChartView] = useState<'month' | 'week'>('month');
 
   useEffect(() => {
     async function fetchAnalytics() {
@@ -117,10 +151,47 @@ export default function AdminDashboardPage() {
 
   const stats = analytics ? [
     { label: 'Total Patients', value: formatNumber(analytics.totalUsers.patients), change: `+${analytics.growthMetrics.newPatientsLastMonth}`, icon: 'group', color: 'primary' },
-    { label: 'Total Dietitians', value: formatNumber(analytics.totalUsers.dietitians), change: `+${analytics.growthMetrics.newDietitiansLastMonth}`, icon: 'medical_information', color: 'emerald' },
+    { label: 'Total Dietitians', value: formatNumber(analytics.totalUsers.doctors), change: `+${analytics.growthMetrics.newDietitiansLastMonth}`, icon: 'medical_information', color: 'emerald' },
     { label: 'Appointments', value: formatNumber(analytics.appointments.month), change: calculateChange(analytics.appointments.month, analytics.appointments.week), icon: 'calendar_month', color: 'amber' },
     { label: 'Total Revenue', value: formatCurrency(analytics.revenue.totalRevenue), change: calculateChange(analytics.revenue.monthlyRevenue, analytics.revenue.weeklyRevenue * 4), icon: 'payments', color: 'blue' },
   ] : [];
+
+  const totalAppointments = analytics ? analytics.appointments.pending + analytics.appointments.confirmed + analytics.appointments.completed + analytics.appointments.cancelled : 1;
+  
+  const filterPills = analytics ? [
+    { label: 'Pending', percent: `${Math.round((analytics.appointments.pending / totalAppointments) * 100)}%`, active: false, color: 'dark' },
+    { label: 'Confirmed', percent: `${Math.round((analytics.appointments.confirmed / totalAppointments) * 100)}%`, active: true, color: 'primary' },
+    { label: 'Completed', percent: `${Math.round((analytics.appointments.completed / totalAppointments) * 100)}%`, active: false, color: 'default' },
+    { label: 'Cancelled', percent: `${Math.round((analytics.appointments.cancelled / totalAppointments) * 100)}%`, active: false, color: 'default' },
+  ] : defaultFilterPills;
+
+  const staffMembers = analytics?.staffMembers && analytics.staffMembers.length > 0 
+    ? analytics.staffMembers 
+    : defaultStaffMembers;
+
+  const weekDays = analytics?.weeklyDistribution && analytics.weeklyDistribution.length > 0
+    ? analytics.weeklyDistribution.map(d => ({ ...d, height: Math.max((d.count / Math.max(...analytics.weeklyDistribution.map(wd => wd.count), 1)) * 100, 20) }))
+    : defaultWeekDays.map(d => ({ ...d, height: d.height }));
+  
+  const weeklyTotal = analytics?.weeklyDistribution && analytics.weeklyDistribution.length > 0
+    ? analytics.weeklyDistribution.reduce((sum, d) => sum + d.count, 0)
+    : defaultWeekDays.reduce((sum, d) => sum + d.count, 0);
+
+  const recentActivityData = analytics?.recentActivity && analytics.recentActivity.length > 0
+    ? analytics.recentActivity
+    : recentActivity;
+
+  const trendData = analytics?.trendData && analytics.trendData.length > 0
+    ? analytics.trendData
+    : [];
+  
+  const chartData = chartView === 'month' 
+    ? trendData 
+    : trendData.slice(-7);
+  
+  const { path: chartPath, areaPath: chartAreaPath, points } = generateChartPath(chartData);
+  const maxChartValue = Math.max(...chartData.map(d => d.count), 1);
+  const totalAppointmentsChart = chartData.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <div className="p-8">
@@ -193,29 +264,36 @@ export default function AdminDashboardPage() {
                   <p className="text-muted-foreground text-sm">Monthly appointment volume for 2024</p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="px-3 py-1.5 text-xs font-semibold bg-muted rounded-lg">Month</button>
-                  <button className="px-3 py-1.5 text-xs font-semibold hover:bg-muted rounded-lg transition-colors">Week</button>
+                  <button onClick={() => setChartView('month')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${chartView === 'month' ? 'bg-muted' : 'hover:bg-muted transition-colors'}`}>Month</button>
+                  <button onClick={() => setChartView('week')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${chartView === 'week' ? 'bg-muted' : 'hover:bg-muted transition-colors'}`}>Week</button>
                 </div>
               </div>
               <div className="w-full h-64 relative mt-4">
-                <svg className="w-full h-full overflow-visible" viewBox="0 0 800 200">
-                  <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="0" y2="0" />
-                  <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="50" y2="50" />
-                  <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="100" y2="100" />
-                  <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="150" y2="150" />
-                  <defs>
-                    <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#facc15" />
-                      <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,180 L50,160 L100,170 L150,120 L200,130 L250,90 L300,100 L350,60 L400,80 L450,40 L500,55 L550,20 L600,45 L650,15 L700,30 L750,10 L800,25 V200 H0 Z" fill="url(#gradient)" opacity="0.4" />
-                  <path d="M0,180 L50,160 L100,170 L150,120 L200,130 L250,90 L300,100 L350,60 L400,80 L450,40 L500,55 L550,20 L600,45 L650,15 L700,30 L750,10 L800,25" fill="none" stroke="#facc15" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-                  <circle cx="550" cy="20" fill="#facc15" r="5" stroke="white" strokeWidth="2" />
-                  <circle cx="750" cy="10" fill="#facc15" r="5" stroke="white" strokeWidth="2" />
-                </svg>
+                {chartData.length > 0 ? (
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 800 200">
+                    <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="0" y2="0" />
+                    <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="50" y2="50" />
+                    <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="100" y2="100" />
+                    <line className="text-border" stroke="currentColor" strokeDasharray="4" x1="0" x2="800" y1="150" y2="150" />
+                    <defs>
+                      <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#facc15" />
+                        <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={chartAreaPath} fill="url(#chartGradient)" opacity="0.4" />
+                    <path d={chartPath} fill="none" stroke="#facc15" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+                    {points.slice(-2).map((p, i) => (
+                      <circle key={i} cx={p.x} cy={p.y} fill="#facc15" r="5" stroke="white" strokeWidth="2" />
+                    ))}
+                  </svg>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">No data available</div>
+                )}
                 <div className="flex justify-between mt-6 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-1">
-                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                  {chartData.map((d, i) => (
+                    <span key={i}>{getMonthLabel(d.date)}</span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -226,15 +304,15 @@ export default function AdminDashboardPage() {
                 <span className="text-xs bg-slate-800 px-2 py-1 rounded">Last 24h</span>
               </div>
               <div className="space-y-6 relative z-10">
-                {recentActivity.map((activity, index) => (
+                {recentActivityData.map((activity, index) => (
                   <div key={index} className="flex gap-4">
                     <div className="relative">
                       <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
                         <span className={`material-icons-round text-sm ${activity.color === 'primary' ? 'text-primary' : activity.color === 'emerald' ? 'text-emerald-400' : 'text-amber-400'}`}>{activity.icon}</span>
                       </div>
-                      {index < recentActivity.length - 1 && <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[2px] h-full bg-slate-800"></div>}
+                      {index < recentActivityData.length - 1 && <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[2px] h-full bg-slate-800"></div>}
                     </div>
-                    <div className={`flex-1 ${index < recentActivity.length - 1 ? 'pb-6 border-b border-slate-800/50' : ''}`}>
+                    <div className={`flex-1 ${index < recentActivityData.length - 1 ? 'pb-6 border-b border-slate-800/50' : ''}`}>
                       <p className="text-sm font-medium">{activity.action}</p>
                       <p className="text-xs text-slate-400 mt-1">{activity.detail}</p>
                       <span className="text-[10px] text-slate-500 mt-2 inline-block">{activity.time}</span>
@@ -248,28 +326,13 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8">
-            <div className="bg-card p-6 rounded-[2rem] border border-border/60 shadow-sm">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h4 className="font-bold text-foreground">Weekly Distribution</h4>
-                  <p className="text-xs text-muted-foreground">Appointments this week</p>
-                </div>
-                <span className="text-2xl font-bold text-foreground">94</span>
-              </div>
-              <div className="flex items-end justify-between h-32 mt-10 px-2">
-                {weekDays.map((day) => (
-                  <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
-                    <div className={`w-2.5 rounded-full ${day.color === 'primary' ? 'bg-primary' : 'bg-slate-900 dark:bg-slate-700'}`} style={{ height: `${day.height}%` }}></div>
-                    <span className="text-[10px] font-bold text-muted-foreground">{day.day}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="lg:col-span-3 bg-card p-8 rounded-[2rem] border border-border/60 shadow-sm">
+            <div className="lg:col-span-full bg-card p-8 rounded-[2rem] border border-border/60 shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h4 className="font-bold text-lg text-foreground">New Staff Members</h4>
-                <button className="text-sm font-semibold text-primary">View All</button>
+                <Button asChild variant='secondary' className="text-sm font-semibold text-primary">
+                  <Link href={'/admin/staff'}>View All</Link>
+                </Button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -301,9 +364,9 @@ export default function AdminDashboardPage() {
                           <span className={`px-2 py-1 text-[10px] font-bold rounded-md ${getStatusColor(member.status)}`}>{member.status.toUpperCase()}</span>
                         </td>
                         <td className="py-4 text-sm text-muted-foreground">{member.dateJoined}</td>
-                        <td className="py-4 text-right">
+                        {/* <td className="py-4 text-right">
                           <button className="material-icons-round text-muted-foreground hover:text-foreground transition-colors">more_vert</button>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>

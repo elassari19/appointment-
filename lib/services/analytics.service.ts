@@ -1,7 +1,8 @@
 import { AppDataSource } from '@/lib/database';
 import { User, UserRole } from '@/lib/entities/User';
 import { Appointment, AppointmentStatus } from '@/lib/entities/Appointment';
-import { AuditLog } from '@/lib/entities/AuditLog';
+import { AuditLog, AuditAction } from '@/lib/entities/AuditLog';
+import { DoctorProfile } from '@/lib/entities/DoctorProfile';
 import { Payment, PaymentStatus } from '@/lib/entities/Payment';
 import { MoreThanOrEqual, LessThanOrEqual, LessThan } from 'typeorm';
 
@@ -55,6 +56,31 @@ export interface PlatformAnalytics {
     newAppointmentsLastMonth: number;
     monthOverMonthGrowth: number;
   };
+  recentActivity: Array<{
+    action: string;
+    detail: string;
+    time: string;
+    icon: string;
+    color: string;
+  }>;
+  staffMembers: Array<{
+    id: string;
+    name: string;
+    email: string;
+    specialty: string;
+    status: string;
+    dateJoined: string;
+    avatar: string;
+  }>;
+  weeklyDistribution: Array<{
+    day: string;
+    count: number;
+    color: string;
+  }>;
+  trendData: Array<{
+    date: string;
+    count: number;
+  }>;
 }
 
 export interface DateRangeAnalytics {
@@ -155,6 +181,10 @@ export class AnalyticsService {
         newAppointmentsLastMonth: monthAppointments.length,
         monthOverMonthGrowth: await this.calculateMonthOverMonthGrowth(),
       },
+      recentActivity: this.formatRecentActivity(recentAuditLogs),
+      staffMembers: await this.getStaffMembers(),
+      weeklyDistribution: this.calculateWeeklyDistribution(weekAppointments),
+      trendData: await this.getAppointmentTrend(30),
     };
   }
 
@@ -289,6 +319,93 @@ export class AnalyticsService {
 
   private calculateMonthOverMonthGrowth() {
     return 15;
+  }
+
+  private formatRecentActivity(auditLogs: AuditLog[]): Array<{ action: string; detail: string; time: string; icon: string; color: string }> {
+    const iconMap: Record<string, { icon: string; color: string }> = {
+      [AuditAction.USER_CREATED]: { icon: 'person_add', color: 'primary' },
+      [AuditAction.USER_UPDATED]: { icon: 'edit', color: 'blue' },
+      [AuditAction.USER_DELETED]: { icon: 'delete', color: 'red' },
+      [AuditAction.LOGIN]: { icon: 'login', color: 'emerald' },
+      [AuditAction.LOGOUT]: { icon: 'logout', color: 'amber' },
+      [AuditAction.PAYMENT_COMPLETED]: { icon: 'payments', color: 'emerald' },
+      [AuditAction.APPOINTMENT_CREATED]: { icon: 'event', color: 'primary' },
+      DEFAULT: { icon: 'info', color: 'default' },
+    };
+
+    const actionMap: Record<string, string> = {
+      [AuditAction.USER_CREATED]: 'New user registered',
+      [AuditAction.USER_UPDATED]: 'updated',
+      [AuditAction.USER_DELETED]: 'deleted',
+      [AuditAction.LOGIN]: 'logged in',
+      [AuditAction.LOGOUT]: 'logged out',
+      [AuditAction.PAYMENT_COMPLETED]: 'payment processed',
+      [AuditAction.APPOINTMENT_CREATED]: 'appointment created',
+    };
+
+    return auditLogs.slice(0, 5).map(log => {
+      const iconInfo = iconMap[log.action] || iconMap.DEFAULT;
+      const actionText = actionMap[log.action] || log.action;
+      const time = new Date(log.createdAt);
+      const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      
+      return {
+        action: actionText.charAt(0).toUpperCase() + actionText.slice(1),
+        detail: `${log.resourceType || 'System'}: ${log.description || 'Action performed'}`,
+        time: timeStr,
+        icon: iconInfo.icon,
+        color: iconInfo.color,
+      };
+    });
+  }
+
+  private async getStaffMembers(): Promise<Array<{ id: string; name: string; email: string; specialty: string; status: string; dateJoined: string; avatar: string }>> {
+    const doctorProfileRepository = AppDataSource.getRepository(DoctorProfile);
+    
+    const doctors = await this.userRepository.find({
+      where: { role: UserRole.DOCTOR },
+      order: { createdAt: 'DESC' },
+      take: 5,
+    });
+
+    const staffMembers = await Promise.all(
+      doctors.map(async (doc) => {
+        const profile = await doctorProfileRepository.findOne({
+          where: { userId: doc.id },
+        });
+        
+        return {
+          id: doc.id,
+          name: `Dr. ${doc.firstName} ${doc.lastName}`,
+          email: doc.email,
+          specialty: profile?.specialty || 'General Medicine',
+          status: doc.isActive ? 'Active' : 'On Leave',
+          dateJoined: new Date(doc.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          avatar: doc.profilePicture || `https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face`,
+        };
+      })
+    );
+
+    return staffMembers;
+  }
+
+  private calculateWeeklyDistribution(appointments: Appointment[]): Array<{ day: string; count: number; color: string }> {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayCounts = new Array(7).fill(0);
+
+    appointments.forEach(apt => {
+      const dayIndex = new Date(apt.createdAt).getDay();
+      const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+      dayCounts[adjustedIndex]++;
+    });
+
+    const maxCount = Math.max(...dayCounts, 1);
+
+    return days.map((day, index) => ({
+      day,
+      count: dayCounts[index],
+      color: dayCounts[index] === maxCount ? 'primary' : 'dark',
+    }));
   }
 
   async getDateRangeAnalytics(dateRange: { start: string; end: string }): Promise<DateRangeAnalytics> {
