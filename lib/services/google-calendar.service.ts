@@ -190,7 +190,6 @@ export class GoogleCalendarService {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Google Calendar API error:', JSON.stringify(error, null, 2));
       throw new Error(error.error?.message || 'Google Calendar API error');
     }
 
@@ -247,16 +246,12 @@ export class GoogleCalendarService {
 
       const result = await this.makeRequest('/calendars/primary/events', 'POST', eventWithMeet);
 
-      console.log('Google Calendar API response:', JSON.stringify(result, null, 2));
-
       let meetingLink = result.conferenceData?.entryPoints?.find(
         (ep: any) => ep.entryPointType === 'video'
       )?.uri;
 
-      // Fallback: if no meeting link in conferenceData, generate one from eventId
       if (!meetingLink && result.id) {
         meetingLink = `https://meet.google.com/${result.id}`;
-        console.log('Using fallback meeting link:', meetingLink);
       }
 
       return {

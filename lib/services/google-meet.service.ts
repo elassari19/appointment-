@@ -93,8 +93,6 @@ export class GoogleMeetService {
 
       const result = await this.calendarService.createEventWithMeet(calendarEvent);
 
-      console.log('GoogleMeetService - createEventWithMeet result:', result);
-
       if (result.success && result.meetingLink) {
         return {
           success: true,
@@ -103,10 +101,8 @@ export class GoogleMeetService {
         };
       }
 
-      // If success but no meeting link, generate fallback
       if (result.success && result.eventId) {
         const fallbackLink = `https://meet.google.com/${result.eventId}`;
-        console.log('Using fallback from eventId:', fallbackLink);
         return {
           success: true,
           meetingLink: fallbackLink,

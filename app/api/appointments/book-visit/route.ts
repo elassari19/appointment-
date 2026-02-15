@@ -104,8 +104,6 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send notification:', notificationError);
     }
 
-    console.log('Returning appointment with meetingLink:', result.meetingLink);
-
     return NextResponse.json({
       appointment: {
         id: result.appointment.id,

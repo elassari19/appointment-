@@ -135,8 +135,6 @@ export class AppointmentService {
     try {
       const meetService = new GoogleMeetService();
 
-      console.log('Creating Google Meet with token:', !!data.googleAccessToken);
-
       const meetResult = await meetService.createMeetMeeting({
         appointment: savedAppointment,
         patient,
@@ -144,8 +142,6 @@ export class AppointmentService {
         accessToken: data.googleAccessToken,
         refreshToken: data.googleRefreshToken,
       });
-
-      console.log('Meet result:', meetResult);
 
       if (meetResult.success && meetResult.meetingLink) {
         meetingLink = meetResult.meetingLink;
@@ -157,25 +153,19 @@ export class AppointmentService {
         }
 
         await this.appointmentRepository.save(savedAppointment);
-        console.log('Meeting link saved:', meetingLink);
       } else {
-        console.error('Failed to create Meet:', meetResult.error);
-        // Generate fallback meeting link
         const fallbackLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 11)}`;
         savedAppointment.meetingLink = fallbackLink;
         await this.appointmentRepository.save(savedAppointment);
         meetingLink = fallbackLink;
-        console.log('Using fallback meeting link:', fallbackLink);
       }
     } catch (error) {
       console.error('Failed to create Google Meet meeting:', error);
-      // Generate fallback meeting link even on error
       try {
         const fallbackLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 11)}`;
         savedAppointment.meetingLink = fallbackLink;
         await this.appointmentRepository.save(savedAppointment);
         meetingLink = fallbackLink;
-        console.log('Using fallback meeting link after error:', fallbackLink);
       } catch (saveError) {
         console.error('Failed to save fallback meeting link:', saveError);
       }
