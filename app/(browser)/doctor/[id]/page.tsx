@@ -1,6 +1,8 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { 
   Star,
   MapPin,
@@ -18,86 +20,158 @@ import {
   Navigation,
   Check,
   Shield,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react"
+
+interface DoctorData {
+  id: string
+  name: string
+  firstName: string
+  lastName: string
+  title: string
+  hospital: string
+  languages: string[]
+  rating: number
+  patients: string
+  experience: number
+  verified: boolean
+  available: boolean
+  fee: number
+  image: string | null
+  specializations: string[]
+  education: { school: string; degree: string }[]
+  about: { summary: string; detailed: string }
+  reviews: {
+    list: { id: string; name: string; initials: string; date: string; rating: number; text: string; isVerified: boolean }[]
+    total: number
+    summary: { averageRating: number; distribution: { 1: number; 2: number; 3: number; 4: number; 5: number } }
+  }
+  calendar: {
+    month: number
+    year: number
+    days: { day: string | null; date: number | null; slots: string[]; isPast?: boolean; isToday?: boolean }[]
+  }
+  clinic: {
+    name: string
+    address: string
+    phone: string | null
+    hours: { day: string; openTime: string; closeTime: string; isClosed: boolean }[]
+    mapImage: string | null
+  }
+  insurance: string[]
+  telemedicineEnabled: boolean
+}
 
 export default function DoctorPage() {
   const { t } = useLocale()
+  const params = useParams()
+  const router = useRouter()
+  const doctorId = params.id as string
 
-  const doctor = {
-    name: 'Dr. Julian Thorne, MD',
-    title: t('doctorPage.seniorInterventional'),
-    hospital: 'Mount Sinai Heart, New York',
-    languages: ['English', 'Spanish', 'French'],
-    rating: 4.9,
-    patients: '2,400+',
-    experience: 15,
-    verified: true,
-    available: true,
-    fee: 150,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGS9WZWmD1vHYRKhfRNkWIC4iqC_IWtHIJolGKsddb5Vw-p_ituUUuDjZW5tb-cVacOu5rTc0RloW2J-xsyd2zQGEAh5M25eSFwdbG1KbzsTW945Hs1n7XxW2dPoSYOLSgnoO-OrnOH4X2w5FnTslf_QxT9N-fnUichxJr00_rhW42DW5St7_i2gxMF5lFH0i_FnYS-HpZGbMIYmJoBMhw941IKavdkplDwewmAPufCdqjoUyGWSQYd6CDEz67tsg4u8UAgyn7jkYD'
+  const [doctor, setDoctor] = useState<DoctorData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<number | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [calendarDate, setCalendarDate] = useState({ month: new Date().getMonth(), year: new Date().getFullYear() })
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      if (!doctorId) return
+      
+      setLoading(true)
+      try {
+        const response = await fetch(`/api/doctors/browser/${doctorId}?month=${calendarDate.month}&year=${calendarDate.year}`)
+        const data = await response.json()
+        
+        if (data.error) {
+          setError(data.error)
+        } else {
+          setDoctor(data)
+        }
+      } catch (err) {
+        setError('Failed to load doctor')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDoctor()
+  }, [doctorId, calendarDate.month, calendarDate.year])
+
+  const getDefaultImage = () => {
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e2e8f0' viewBox='0 0 24 24'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"
   }
 
-  const specializations = [
-    t('doctorPage.cardiacImaging'),
-    t('doctorPage.interventionalCardio'),
-    t('doctorPage.hypertension'),
-    t('doctorPage.vascularSurgery')
-  ]
+  const getMonthName = (month: number) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    return months[month]
+  }
 
-  const education = [
-    {
-      school: 'Harvard Medical School',
-      degree: t('doctorPage.medicalDoctorate')
-    },
-    {
-      school: 'Johns Hopkins Hospital',
-      degree: t('doctorPage.residency')
-    }
-  ]
+  const handlePrevMonth = () => {
+    setCalendarDate(prev => {
+      const newMonth = prev.month - 1
+      if (newMonth < 0) {
+        return { month: 11, year: prev.year - 1 }
+      }
+      return { month: newMonth, year: prev.year }
+    })
+  }
 
-  const reviews = [
-    {
-      name: 'Sarah Miller',
-      initials: 'SM',
-      date: '2 weeks ago',
-      rating: 5,
-      text: 'Dr. Thorne was incredibly thorough and took the time to explain my condition in terms I could understand. I felt truly heard and cared for.'
-    },
-    {
-      name: 'Robert King',
-      initials: 'RK',
-      date: '1 month ago',
-      rating: 5,
-      text: 'Outstanding clinic experience. The staff was professional and Dr. Thorne is clearly an expert in his field.'
-    }
-  ]
+  const handleNextMonth = () => {
+    setCalendarDate(prev => {
+      const newMonth = prev.month + 1
+      if (newMonth > 11) {
+        return { month: 0, year: prev.year + 1 }
+      }
+      return { month: newMonth, year: prev.year }
+    })
+  }
 
-  const days = [
-    { day: 'Mon', date: 23, active: true },
-    { day: 'Tue', date: 24, active: false },
-    { day: 'Wed', date: 25, active: false },
-    { day: 'Thu', date: 26, active: false },
-    { day: 'Fri', date: 27, active: false }
-  ]
+  const getRatingPercentage = (stars: number) => {
+    if (!doctor?.reviews?.summary?.distribution) return '0%'
+    const total = Object.values(doctor.reviews.summary.distribution).reduce((a, b) => a + b, 0) || 1
+    const count = doctor.reviews.summary.distribution[stars as keyof typeof doctor.reviews.summary.distribution] || 0
+    return `${Math.round((count / total) * 100)}%`
+  }
 
-  const morningSlots = ['09:00 AM', '10:30 AM', '11:15 AM']
-  const afternoonSlots = ['02:30 PM', '04:00 PM', '05:15 PM']
+  if (loading) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24 min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#eab308] w-12 h-12" />
+      </main>
+    )
+  }
+
+  if (error || !doctor) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24 min-h-screen">
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-600 font-semibold mb-6 hover:text-slate-900 transition-colors">
+          <ArrowLeft size={20} />
+          Back
+        </button>
+        <div className="text-center py-20">
+          <p className="text-xl text-slate-500">{error || 'Doctor not found'}</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
-      <button className="flex items-center gap-2 text-slate-600 font-semibold mb-6 hover:text-slate-900 transition-colors">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-600 font-semibold mb-6 hover:text-slate-900 transition-colors">
         <ArrowLeft size={20} />
         Back
       </button>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-10">
-        <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center md:items-start">
+        <div className="p-8 md:p-12 flex flex-col md:flex-row gap-6 items-center md:items-start">
           <div className="relative group">
             <img 
               alt="Doctor Portrait"
               className="w-48 h-48 md:w-56 md:h-56 rounded-3xl object-cover shadow-2xl shadow-[#eab308]/10 border-4 border-white"
-              src={doctor.image}
+              src={doctor.image || getDefaultImage()}
             />
             {doctor.available && (
               <div className="absolute -bottom-3 -right-3 bg-green-500 p-2 rounded-full border-4 border-white shadow-lg" title={t('doctorPage.availableToday')}>
@@ -128,7 +202,7 @@ export default function DoctorPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-slate-50">
+            <div className="grid grid-cols-3 gap-8 border-t border-slate-50">
               <div className="text-center md:text-left">
                 <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
                   <span className="text-2xl font-black text-slate-900">{doctor.rating}</span>
@@ -157,10 +231,10 @@ export default function DoctorPage() {
               {t('doctorPage.aboutMe')}
             </h2>
             <p className="text-slate-600 text-lg leading-relaxed mb-6">
-              {t('doctorPage.aboutDesc1')}
+              {doctor.about.summary}
             </p>
             <p className="text-slate-600 text-lg leading-relaxed">
-              {t('doctorPage.aboutDesc2')}
+              {doctor.about.detailed}
             </p>
           </section>
 
@@ -171,8 +245,8 @@ export default function DoctorPage() {
                 {t('doctorPage.specializations')}
               </h3>
               <div className="flex flex-wrap gap-2">
-                {specializations.map((spec) => (
-                  <span key={spec} className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold text-slate-600">
+                {doctor.specializations.map((spec, idx) => (
+                  <span key={idx} className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold text-slate-600">
                     {spec}
                   </span>
                 ))}
@@ -185,8 +259,8 @@ export default function DoctorPage() {
                 {t('doctorPage.education')}
               </h3>
               <div className="space-y-6">
-                {education.map((edu) => (
-                  <div key={edu.school} className="flex gap-4">
+                {doctor.education.map((edu, idx) => (
+                  <div key={idx} className="flex gap-4">
                     <div className="w-10 h-10 shrink-0 bg-slate-50 rounded-xl flex items-center justify-center">
                       <Award className="text-slate-400" size={20} />
                     </div>
@@ -206,34 +280,34 @@ export default function DoctorPage() {
                 <MessageSquare className="text-[#eab308]" size={24} />
                 {t('doctorPage.patientReviews')}
               </h2>
-              <span className="px-4 py-1.5 bg-slate-50 rounded-full text-sm font-bold text-slate-500">128 {t('doctorPage.reviews')}</span>
+              <span className="px-4 py-1.5 bg-slate-50 rounded-full text-sm font-bold text-slate-500">{doctor.reviews.total} {t('doctorPage.reviews')}</span>
             </div>
 
             <div className="flex flex-col md:flex-row gap-12 items-center mb-12">
               <div className="text-center shrink-0">
-                <div className="text-6xl font-black text-slate-900 mb-2">4.9</div>
+                <div className="text-6xl font-black text-slate-900 mb-2">{doctor.reviews.summary.averageRating}</div>
                 <div className="flex justify-center text-[#eab308] mb-3">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="fill-current" size={20} />
+                    <Star key={i} className={i < Math.floor(doctor.reviews.summary.averageRating) ? "fill-current" : ""} size={20} />
                   ))}
                 </div>
               </div>
               <div className="flex-1 w-full space-y-3">
-                {[5, 4, 3].map((star) => (
+                {[5, 4, 3, 2, 1].map((star) => (
                   <div key={star} className="flex items-center gap-4">
                     <span className="text-sm font-bold w-4 text-slate-400">{star}</span>
                     <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#eab308]" style={{ width: star === 5 ? '85%' : star === 4 ? '12%' : '3%' }}></div>
+                      <div className="h-full bg-[#eab308]" style={{ width: getRatingPercentage(star) }}></div>
                     </div>
-                    <span className="text-xs font-bold text-slate-500 w-10 text-right">{star === 5 ? '85%' : star === 4 ? '12%' : '3%'}</span>
+                    <span className="text-xs font-bold text-slate-500 w-10 text-right">{getRatingPercentage(star)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="space-y-8">
-              {reviews.map((review) => (
-                <div key={review.name} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              {doctor.reviews.list.map((review) => (
+                <div key={review.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#eab308]/20 flex items-center justify-center text-[#eab308] font-black text-lg">
@@ -242,7 +316,7 @@ export default function DoctorPage() {
                       <div>
                         <p className="font-bold text-slate-900 flex items-center gap-1.5">
                           {review.name}
-                          <Verified className="text-green-500" size={16} />
+                          {review.isVerified && <Verified className="text-green-500" size={16} />}
                         </p>
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{review.date}</p>
                       </div>
@@ -258,9 +332,11 @@ export default function DoctorPage() {
               ))}
             </div>
 
-            <button className="w-full mt-8 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              {t('doctorPage.viewAllReviews').replace('{count}', '128')}
-            </button>
+            {doctor.reviews.total > doctor.reviews.list.length && (
+              <button className="w-full mt-8 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                {t('doctorPage.viewAllReviews').replace('{count}', doctor.reviews.total.toString())}
+              </button>
+            )}
           </section>
         </div>
 
@@ -274,78 +350,93 @@ export default function DoctorPage() {
             <div className="p-8">
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-lg font-black text-slate-900">February 2026</span>
+                  <span className="text-lg font-black text-slate-900">{getMonthName(calendarDate.month)} {calendarDate.year}</span>
                   <div className="flex gap-2">
-                    <button className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600">
+                    <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600">
                       <ChevronLeft size={16} />
                     </button>
-                    <button className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600">
+                    <button onClick={handleNextMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600">
                       <ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-5 gap-3">
-                  {days.map((day) => (
+                  {doctor.calendar.days.map((day, idx) => (
                     <button 
-                      key={day.day}
+                      key={idx}
+                      disabled={!day.date || day.isPast || day.slots.length === 0}
+                      onClick={() => day.date && setSelectedDate(day.date)}
                       className={`flex flex-col items-center py-4 rounded-2xl transition-all ${
-                        day.active 
+                        selectedDate === day.date 
                           ? 'bg-[#eab308] text-white shadow-lg shadow-[#eab308]/20 ring-4 ring-[#eab308]/10' 
-                          : 'hover:bg-slate-50 border border-transparent'
+                        : day.date && !day.isPast && day.slots.length > 0
+                          ? 'hover:bg-slate-50 border border-transparent'
+                          : 'opacity-50 cursor-not-allowed'
                       }`}
                     >
-                      <span className={`text-[10px] uppercase font-${day.active ? 'black' : 'bold'} mb-1 ${!day.active ? 'text-slate-400' : ''}`}>{day.day}</span>
-                      <span className={`text-lg font-black leading-none ${!day.active ? 'text-slate-900' : ''}`}>{day.date}</span>
+                      <span className={`text-[10px] uppercase font-bold mb-1 ${!day.date ? 'invisible' : ''}`}>{day.day || '-'}</span>
+                      <span className={`text-lg font-black leading-none`}>{day.date || '-'}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <Sun size={18} /> {t('doctorPage.morning')}
-                  </h4>
-                  <div className="grid grid-cols-3 gap-3">
-                    {morningSlots.map((slot) => (
-                      <button 
-                        key={slot}
-                        className="py-3 px-1 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-[#eab308] hover:text-[#eab308] transition-all"
-                      >
-                        {slot}
-                      </button>
-                    ))}
+              {selectedDate && (
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                      <Sun size={18} /> {t('doctorPage.morning')}
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {doctor.calendar.days.find(d => d.date === selectedDate)?.slots.filter((s: string) => s.includes('AM')).map((slot: string) => (
+                        <button 
+                          key={slot}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`py-3 px-1 rounded-xl text-xs font-bold transition-all ${
+                            selectedSlot === slot
+                              ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                              : 'border border-slate-200 text-slate-600 hover:border-[#eab308] hover:text-[#eab308]'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <SunMedium size={18} /> {t('doctorPage.afternoon')}
-                  </h4>
-                  <div className="grid grid-cols-3 gap-3">
-                    {afternoonSlots.map((slot, idx) => (
-                      <button 
-                        key={slot}
-                        className={`py-3 px-1 rounded-xl text-xs font-bold transition-all ${
-                          idx === 0 
-                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                            : 'border border-slate-200 text-slate-600 hover:border-[#eab308] hover:text-[#eab308]'
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                      <SunMedium size={18} /> {t('doctorPage.afternoon')}
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {doctor.calendar.days.find(d => d.date === selectedDate)?.slots.filter((s: string) => s.includes('PM')).map((slot: string, idx: number) => (
+                        <button 
+                          key={slot}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`py-3 px-1 rounded-xl text-xs font-bold transition-all ${
+                            selectedSlot === slot
+                              ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                              : 'border border-slate-200 text-slate-600 hover:border-[#eab308] hover:text-[#eab308]'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="mt-12 space-y-6">
                 <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
                   <span className="text-sm font-bold text-slate-500">{t('doctorPage.consultationFee')}</span>
                   <span className="text-xl font-black text-slate-900">${doctor.fee}.00</span>
                 </div>
-                <button className="w-full bg-[#eab308] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-[#eab308]/30 hover:shadow-[#eab308]/40 transition-all active:scale-[0.98]">
+                <button 
+                  disabled={!selectedDate || !selectedSlot}
+                  className="w-full bg-[#eab308] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-[#eab308]/30 hover:shadow-[#eab308]/40 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {t('doctorPage.confirmBooking')}
                 </button>
                 <p className="text-[11px] text-center font-bold text-slate-400 uppercase tracking-tighter">
@@ -361,7 +452,7 @@ export default function DoctorPage() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-slate-900 uppercase tracking-wide">{t('doctorPage.acceptedInsurance')}</p>
-                  <p className="text-[11px] font-bold text-slate-400">BlueCross, Aetna, Medicare, Cigna</p>
+                  <p className="text-[11px] font-bold text-slate-400">{doctor.insurance.join(', ')}</p>
                 </div>
               </div>
             </div>
@@ -378,24 +469,20 @@ export default function DoctorPage() {
             </h2>
             <div className="space-y-8">
               <div>
-                <p className="text-lg font-black text-slate-900 mb-1">Mount Sinai Heart Center</p>
-                <p className="text-sm font-medium text-slate-500 leading-relaxed">1190 5th Ave, New York, NY 10029, United States</p>
+                <p className="text-lg font-black text-slate-900 mb-1">{doctor.clinic.name}</p>
+                <p className="text-sm font-medium text-slate-500 leading-relaxed">{doctor.clinic.address}</p>
               </div>
               <div>
                 <p className="text-[11px] font-black uppercase text-slate-400 mb-4 tracking-widest">{t('doctorPage.officeHours')}</p>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-bold text-slate-600">{t('doctorPage.monFri')}</span>
-                    <span className="font-black text-slate-900">08:00 - 18:00</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="font-bold text-slate-600">{t('doctorPage.saturday')}</span>
-                    <span className="font-black text-slate-900">09:00 - 13:00</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="font-bold text-slate-400">{t('doctorPage.sunday')}</span>
-                    <span className="font-black text-slate-400">{t('doctorPage.closed')}</span>
-                  </div>
+                  {doctor.clinic.hours.map((hours, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className={`font-bold ${hours.isClosed ? 'text-slate-400' : 'text-slate-600'}`}>{hours.day}</span>
+                      <span className={`font-black ${hours.isClosed ? 'text-slate-400' : 'text-slate-900'}`}>
+                        {hours.isClosed ? t('doctorPage.closed') : `${hours.openTime} - ${hours.closeTime}`}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
               <button className="w-full flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10">
@@ -404,11 +491,17 @@ export default function DoctorPage() {
             </div>
           </div>
           <div className="md:col-span-8 h-[500px] relative">
-            <img 
-              alt="Map location"
-              className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOwya0moGwbJic5Dgxkk4HtZd7FSNgCeJv8p8duNOZyb9X-mQZ6LuqQ2h27k0Rh0vNSz6qFoP-dp6XKGQcWWlMwW5yTZB-NAQL1T7fJlUUZXQk1D4fWeMhhV_sWck42EbF0mPm3vnuFWA2IgTwSi4gpdws1uaqSbxld9Mks-yIsNIVImFk-43J47GAjjqdFmiOT48-4iWHfQbY0q9kVQLVdTac5nCRKMEJVrQiW-Mt6ck1LFukL0JVT1DlbmlofZpA27qh1inI21WR"
-            />
+            {doctor.clinic.mapImage ? (
+              <img 
+                alt="Map location"
+                className="w-full h-full object-cover"
+                src={doctor.clinic.mapImage}
+              />
+            ) : (
+              <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                <MapPin className="text-slate-400" size={48} />
+              </div>
+            )}
           </div>
         </div>
       </section>

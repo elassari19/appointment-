@@ -97,7 +97,8 @@ export async function GET(
     ];
 
     const today = new Date();
-    const todayDayOfWeek = today.getDay();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayDayOfWeek = dayNames[today.getDay()];
     
     const todayAvailability = await AppDataSource.query(
       `SELECT * FROM "Availabilities" 
@@ -117,12 +118,13 @@ export async function GET(
     
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      const dayOfWeek = date.getDay();
+      const dayIndex = date.getDay();
+      const dayName = dayNames[dayIndex];
       
       const dayAvailability = await AppDataSource.query(
         `SELECT * FROM "Availabilities" 
          WHERE "doctorId" = $1 AND "isAvailable" = true AND "dayOfWeek" = $2`,
-        [id, dayOfWeek]
+        [id, dayName]
       );
       
       let slots: string[] = [];
@@ -131,7 +133,7 @@ export async function GET(
       }
       
       calendarDays.push({
-        day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek],
+        day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex],
         date: d,
         slots,
         isPast: date < new Date(today.getFullYear(), today.getMonth(), today.getDate()),

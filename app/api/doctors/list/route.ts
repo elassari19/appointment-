@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     // const availability = searchParams.get('availability') || '';
     const minFee = searchParams.get('minFee') ? parseInt(searchParams.get('minFee')!) : 0;
     const maxFee = searchParams.get('maxFee') ? parseInt(searchParams.get('maxFee')!) : 1000;
-    // const sortBy = searchParams.get('sortBy') || 'rating';
+    const sortBy = searchParams.get('sortBy') || 'rating';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
@@ -60,23 +60,23 @@ export async function GET(req: NextRequest) {
     const countResult = await AppDataSource.query(countQuery, params);
     const total = parseInt(countResult[0]?.total || '0');
 
-    // let orderColumn = 'u."createdAt"';
-    // let orderDirection = 'DESC';
+    let orderColumn = 'u."createdAt"';
+    let orderDirection = 'DESC';
 
-    // switch (sortBy) {
-    //   case 'experience':
-    //     orderColumn = 'dp."yearsOfExperience"';
-    //     break;
-    //   case 'feeLowToHigh':
-    //     orderColumn = 'dp."consultationFee"';
-    //     orderDirection = 'ASC';
-    //     break;
-    //   case 'feeHighToLow':
-    //     orderColumn = 'dp."consultationFee"';
-    //     break;
-    //   default:
-    //     orderColumn = 'u."createdAt"';
-    // }
+    switch (sortBy) {
+      case 'experience':
+        orderColumn = 'dp."yearsOfExperience"';
+        break;
+      case 'feeLowToHigh':
+        orderColumn = 'dp."consultationFee"';
+        orderDirection = 'ASC';
+        break;
+      case 'feeHighToLow':
+        orderColumn = 'dp."consultationFee"';
+        break;
+      default:
+        orderColumn = 'u."createdAt"';
+    }
 
     const offset = (page - 1) * limit;
 
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       FROM "Users" u
       LEFT JOIN "DoctorProfiles" dp ON dp."userId" = u.id
       WHERE ${whereClause}
-      ORDER BY u."createdAt" DESC
+      ORDER BY ${orderColumn} ${orderDirection}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
