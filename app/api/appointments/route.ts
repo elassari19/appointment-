@@ -68,11 +68,14 @@ export async function GET(request: NextRequest) {
     }
 
     const userIsDoctor = await isDoctor(userResult.userId);
+    const userIsAdmin = userResult.role === 'admin';
 
-    if (userIsDoctor) {
-      filters.doctorId = userResult.userId;
-    } else {
-      filters.patientId = userResult.userId;
+    if (!userIsAdmin) {
+      if (userIsDoctor) {
+        filters.doctorId = userResult.userId;
+      } else {
+        filters.patientId = userResult.userId;
+      }
     }
 
     const appointments = await appointmentService.getAppointments(filters);
@@ -86,6 +89,28 @@ export async function GET(request: NextRequest) {
         notes: apt.notes,
         meetingLink: apt.meetingLink,
       };
+
+      if (userIsAdmin) {
+        return {
+          ...baseData,
+          patient: apt.patient ? {
+            id: apt.patient.id,
+            firstName: apt.patient.firstName,
+            lastName: apt.patient.lastName,
+            email: apt.patient.email,
+            phone: apt.patient.phone,
+            profilePicture: apt.patient.profilePicture,
+          } : null,
+          doctor: apt.doctor ? {
+            id: apt.doctor.id,
+            firstName: apt.doctor.firstName,
+            lastName: apt.doctor.lastName,
+            email: apt.doctor.email,
+            phone: apt.doctor.phone,
+            profilePicture: apt.doctor.profilePicture,
+          } : null,
+        };
+      }
 
       if (userIsDoctor) {
         return {
