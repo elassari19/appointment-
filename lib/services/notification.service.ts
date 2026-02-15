@@ -3,6 +3,7 @@ import { User } from '@/lib/entities/User';
 import { Appointment } from '@/lib/entities/Appointment';
 import { Notification, NotificationType } from '@/lib/entities/Notification';
 import { NotificationPreference } from '@/lib/entities/NotificationPreference';
+import { emailService } from './email.service';
 
 export { NotificationType };
 
@@ -71,6 +72,20 @@ export class NotificationService {
         patientId: patient.id,
       }
     );
+
+    try {
+      await emailService.sendAppointmentConfirmation({
+        to: patient.email,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        appointmentDate: appointment.startTime,
+        duration: appointment.duration,
+        meetingLink: appointment.meetingLink || undefined,
+        notes: appointment.notes || undefined,
+      });
+    } catch (emailError) {
+      console.error('Failed to send appointment confirmation email:', emailError);
+    }
   }
 
   async sendAppointmentReminder(appointment: Appointment, hoursBefore: number): Promise<void> {

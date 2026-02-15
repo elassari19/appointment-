@@ -79,6 +79,15 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   recoveryCodes?: string;
 
+  @Column({ type: 'text', nullable: true })
+  googleAccessToken?: string;
+
+  @Column({ type: 'text', nullable: true })
+  googleRefreshToken?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  googleTokenExpiresAt?: Date;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 

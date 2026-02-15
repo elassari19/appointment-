@@ -50,7 +50,7 @@ export class GoogleMeetService {
   }
 
   private generateRequestId(): string {
-    return `nutrison-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    return `nutrison${Date.now()}${Math.random().toString(36).substring(2, 9)}`;
   }
 
   async createMeetMeeting(params: CreateMeetParams): Promise<MeetSyncResult> {
@@ -93,10 +93,23 @@ export class GoogleMeetService {
 
       const result = await this.calendarService.createEventWithMeet(calendarEvent);
 
+      console.log('GoogleMeetService - createEventWithMeet result:', result);
+
       if (result.success && result.meetingLink) {
         return {
           success: true,
           meetingLink: result.meetingLink,
+          eventId: result.eventId,
+        };
+      }
+
+      // If success but no meeting link, generate fallback
+      if (result.success && result.eventId) {
+        const fallbackLink = `https://meet.google.com/${result.eventId}`;
+        console.log('Using fallback from eventId:', fallbackLink);
+        return {
+          success: true,
+          meetingLink: fallbackLink,
           eventId: result.eventId,
         };
       }

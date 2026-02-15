@@ -113,24 +113,26 @@ export class GoogleCalendarService {
            (!this.expiresAt || this.expiresAt > new Date());
   }
 
-  private getAuthUrl(clientId: string, redirectUri: string, scopes: string[]): string {
+  getAuthorizationUrl(clientId: string, redirectUri: string, userId?: string): string {
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+    ];
+
     const params = new URLSearchParams({
-      clientId: clientId,
+      client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: scopes.join(' '),
       access_type: 'offline',
       prompt: 'consent',
     });
+    
+    if (userId) {
+      params.set('state', userId);
+    }
+    
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-  }
-
-  getAuthorizationUrl(clientId: string, redirectUri: string): string {
-    const scopes = [
-      'https://www.googleapis.com/auth/calendar',
-      'https://www.googleapis.com/auth/calendar.events',
-    ];
-    return this.getAuthUrl(clientId, redirectUri, scopes);
   }
 
   async exchangeCodeForTokens(
@@ -188,6 +190,7 @@ export class GoogleCalendarService {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Google Calendar API error:', JSON.stringify(error, null, 2));
       throw new Error(error.error?.message || 'Google Calendar API error');
     }
 
@@ -227,7 +230,7 @@ export class GoogleCalendarService {
         conferenceDataVersion: 1,
         conferenceData: event.conferenceData || {
           createRequest: {
-            requestId: `nutrison-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            requestId: `nutrison${Date.now()}${Math.random().toString(36).substring(2, 9)}`,
             conferenceSolutionKey: {
               type: 'hangoutsMeet',
             },
@@ -244,14 +247,22 @@ export class GoogleCalendarService {
 
       const result = await this.makeRequest('/calendars/primary/events', 'POST', eventWithMeet);
 
-      const meetingLink = result.conferenceData?.entryPoints?.find(
+      console.log('Google Calendar API response:', JSON.stringify(result, null, 2));
+
+      let meetingLink = result.conferenceData?.entryPoints?.find(
         (ep: any) => ep.entryPointType === 'video'
       )?.uri;
+
+      // Fallback: if no meeting link in conferenceData, generate one from eventId
+      if (!meetingLink && result.id) {
+        meetingLink = `https://meet.google.com/${result.id}`;
+        console.log('Using fallback meeting link:', meetingLink);
+      }
 
       return {
         success: true,
         eventId: result.id,
-        meetingLink: meetingLink || `https://meet.google.com/${result.id}`,
+        meetingLink,
       };
     } catch (error) {
       return {

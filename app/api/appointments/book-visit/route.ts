@@ -30,14 +30,14 @@ async function getUserFromRequest(request: NextRequest): Promise<{ userId: strin
     return null;
   }
 
-  const googleTokens = (user as any).googleTokens;
+  const googleAccessToken = (user as any).googleAccessToken;
 
   return {
     userId: user.id,
     email: user.email,
-    googleTokens: googleTokens ? {
-      accessToken: googleTokens.accessToken,
-      refreshToken: googleTokens.refreshToken,
+    googleTokens: googleAccessToken ? {
+      accessToken: googleAccessToken,
+      refreshToken: (user as any).googleRefreshToken,
     } : undefined,
   };
 }
@@ -77,8 +77,13 @@ export async function POST(request: NextRequest) {
       };
 
       result = await appointmentService.createAppointmentWithMeet(appointmentData);
+    } else if (createMeetLink && !userResult.googleTokens) {
+      return NextResponse.json(
+        { error: 'Google account not connected. Please connect your Google account to create meeting links.' },
+        { status: 400 }
+      );
     } else {
-      const appointment = await appointmentService.createAppointment({
+      const appointmentResult = await appointmentService.createAppointment({
         patientId: userResult.userId,
         doctorId,
         startTime: new Date(startTime),
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
       });
 
       result = {
-        appointment,
+        appointment: appointmentResult.appointment,
         meetingLink: undefined,
         calendarEventId: undefined,
       };
@@ -98,6 +103,8 @@ export async function POST(request: NextRequest) {
     } catch (notificationError) {
       console.error('Failed to send notification:', notificationError);
     }
+
+    console.log('Returning appointment with meetingLink:', result.meetingLink);
 
     return NextResponse.json({
       appointment: {

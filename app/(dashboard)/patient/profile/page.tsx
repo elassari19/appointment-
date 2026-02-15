@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   User, Mail, Phone, Calendar, Camera, Shield, 
   CheckCircle2, AlertCircle, Loader2, Edit3, Save, X,
-  FileText, Clock, Award, Lock
+  FileText, Clock, Award, Lock, Link2, Unlink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,8 +54,13 @@ export default function PatientProfilePage() {
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   useEffect(() => {
     fetchProfile();
+    fetchGoogleStatus();
+    handleGoogleCallback();
   }, []);
 
   const fetchProfile = async () => {
@@ -100,6 +105,55 @@ export default function PatientProfilePage() {
       setAlert({ type: 'error', message: 'Failed to load profile' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchGoogleStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/google/status');
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleConnected(data.connected);
+      }
+    } catch (error) {
+      console.error('Error fetching Google status:', error);
+    }
+  };
+
+  const handleGoogleCallback = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google_connected') === 'true') {
+      setGoogleConnected(true);
+      setAlert({ type: 'success', message: 'Google Calendar connected successfully!' });
+      window.history.replaceState({}, '', '/patient/profile');
+    } else if (params.get('google_error')) {
+      const errorMsg = params.get('google_error');
+      setAlert({ type: 'error', message: `Failed to connect Google: ${errorMsg}` });
+      window.history.replaceState({}, '', '/patient/profile');
+    }
+  };
+
+  const handleGoogleConnect = () => {
+    window.location.href = '/api/auth/google';
+  };
+
+  const handleGoogleDisconnect = async () => {
+    setGoogleLoading(true);
+    try {
+      const response = await fetch('/api/auth/google/status', {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setGoogleConnected(false);
+        setAlert({ type: 'success', message: 'Google Calendar disconnected' });
+      } else {
+        setAlert({ type: 'error', message: 'Failed to disconnect Google' });
+      }
+    } catch (error) {
+      console.error('Error disconnecting Google:', error);
+      setAlert({ type: 'error', message: 'Failed to disconnect Google' });
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -639,6 +693,63 @@ export default function PatientProfilePage() {
                 <Award className="w-4 h-4" />
                 Change Password
               </Button>
+            </div>
+          </div>
+
+          {/* Google Calendar Integration */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+            <h3 className="font-semibold text-[#1e293b] mb-5 flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.5 3h-3V1.5h-1.5V3h-6V1.5H7.5V3h-3C3.675 3 3 3.675 3 4.5v15c0 .825.675 1.5 1.5 1.5h15c.825 0 1.5-.675 1.5-1.5v-15c0-.825-.675-1.5-1.5-1.5zm0 16.5h-15V8.25h15v11.25z"/>
+                </svg>
+              </div>
+              Google Calendar Integration
+            </h3>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${googleConnected ? 'bg-blue-100' : 'bg-slate-200'}`}>
+                  {googleConnected ? (
+                    <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.5 3h-3V1.5h-1.5V3h-6V1.5H7.5V3h-3C3.675 3 3 3.675 3 4.5v15c0 .825.675 1.5 1.5 1.5h15c.825 0 1.5-.675 1.5-1.5v-15c0-.825-.675-1.5-1.5-1.5zm0 16.5h-15V8.25h15v11.25z"/>
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.5 3h-3V1.5h-1.5V3h-6V1.5H7.5V3h-3C3.675 3 3 3.675 3 4.5v15c0 .825.675 1.5 1.5 1.5h15c.825 0 1.5-.675 1.5-1.5v-15c0-.825-.675-1.5-1.5-1.5zm0 16.5h-15V8.25h15v11.25z"/>
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-[#1e293b]">Google Calendar</p>
+                  <p className="text-sm text-slate-500">
+                    {googleConnected ? 'Connected - Google Meet links will be created for appointments' : 'Not connected - Connect to create Meet links'}
+                  </p>
+                </div>
+              </div>
+              {googleConnected ? (
+                <Button 
+                  variant="outline" 
+                  className="gap-2 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                  onClick={handleGoogleDisconnect}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Unlink className="w-4 h-4" />
+                  )}
+                  Disconnect
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="gap-2 rounded-xl border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                  onClick={handleGoogleConnect}
+                >
+                  <Link2 className="w-4 h-4" />
+                  Connect
+                </Button>
+              )}
             </div>
           </div>
         </div>
