@@ -46,6 +46,15 @@ export class User {
   @Column({ type: 'date', nullable: true })
   dateOfBirth?: Date;
 
+  @Column({ type: 'float', nullable: true })
+  weight?: number;
+
+  @Column({ type: 'float', nullable: true })
+  height?: number;
+
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  bloodType?: string;
+
   @Column({ type: 'text', nullable: true })
   profilePicture?: string;
 
