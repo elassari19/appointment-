@@ -1,6 +1,8 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 import { 
   Video,
   FileText,
@@ -20,6 +22,18 @@ import {
 
 export default function ServicesPage() {
   const { t } = useLocale()
+  const router = useRouter()
+  const { user } = useAuth()
+
+  const getBookingUrl = () => {
+    if (!user) return '/login'
+    switch (user.role) {
+      case 'patient': return '/patient/book'
+      case 'doctor': return '/doctors/appointments'
+      case 'admin': return '/admin/appointments'
+      default: return '/login'
+    }
+  }
 
   const services = [
     {
@@ -107,10 +121,13 @@ export default function ServicesPage() {
             </div>
             <h4 className="text-xl font-bold mb-3">{service.title}</h4>
             <p className="text-[#9a8d4c] text-sm leading-relaxed mb-6 flex-grow">{service.description}</p>
-            <button className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${service.isFeatured 
-              ? 'bg-[#edca13] text-white shadow-lg shadow-[#edca13]/20 hover:brightness-105' 
-              : 'bg-[#edca13]/10 text-[#edca13] group-hover:bg-[#edca13] group-hover:text-white'
-            }`}>
+            <button 
+              onClick={() => router.push(getBookingUrl())}
+              className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${service.isFeatured 
+                ? 'bg-[#edca13] text-white shadow-lg shadow-[#edca13]/20 hover:brightness-105' 
+                : 'bg-[#edca13]/10 text-[#edca13] group-hover:bg-[#edca13] group-hover:text-white'
+              }`}
+            >
               {service.isFeatured ? t('servicesPage.getHelp') : t('servicesPage.bookNow')}
               <ArrowRight className="text-sm" size={16} />
             </button>
@@ -133,7 +150,10 @@ export default function ServicesPage() {
         <h3 className="text-3xl lg:text-4xl font-extrabold mb-6 relative z-10">{t('servicesPage.ctaTitle')}</h3>
         <p className="text-white/70 max-w-xl mx-auto mb-10 relative z-10">{t('servicesPage.ctaSubtitle')}</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
-          <button className="px-8 py-4 bg-[#edca13] text-[#1b190d] font-extrabold rounded-xl hover:scale-105 transition-transform w-full sm:w-auto">
+          <button 
+            onClick={() => router.push(getBookingUrl())}
+            className="px-8 py-4 bg-[#edca13] text-[#1b190d] font-extrabold rounded-xl hover:scale-105 transition-transform w-full sm:w-auto"
+          >
             {t('servicesPage.scheduleAppointment')}
           </button>
           <button className="px-8 py-4 bg-white/10 text-white font-extrabold rounded-xl border border-white/20 hover:bg-white/20 transition-all w-full sm:w-auto">

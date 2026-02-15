@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "../ui/button";
 import { Star } from "lucide-react";
 import Image from "next/image";

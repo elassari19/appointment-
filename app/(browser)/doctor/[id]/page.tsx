@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { 
@@ -67,7 +68,18 @@ export default function DoctorPage() {
   const { t } = useLocale()
   const params = useParams()
   const router = useRouter()
+  const { user } = useAuth()
   const doctorId = params.id as string
+
+  const getBookingUrl = () => {
+    if (!user) return '/login'
+    switch (user.role) {
+      case 'patient': return '/patient/book'
+      case 'doctor': return '/doctors/appointments'
+      case 'admin': return '/admin/appointments'
+      default: return '/login'
+    }
+  }
 
   const [doctor, setDoctor] = useState<DoctorData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -434,6 +446,7 @@ export default function DoctorPage() {
                   <span className="text-xl font-black text-slate-900">${doctor.fee}.00</span>
                 </div>
                 <button 
+                  onClick={() => router.push(getBookingUrl())}
                   disabled={!selectedDate || !selectedSlot}
                   className="w-full bg-[#eab308] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-[#eab308]/30 hover:shadow-[#eab308]/40 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >

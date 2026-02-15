@@ -14,6 +14,24 @@ const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const {locale, setLocale, t} = useLocale();
   const {isAuthenticated, user, logout} = useAuth();
+
+  const navLinks = [
+    {key: 'nav.home', href: '/', active: true},
+    {key: 'nav.aboutUs', href: '/about'},
+    {key: 'nav.services', href: '/services'},
+    {key: 'nav.doctors', href: '/doctor'},
+    {key: 'nav.blog', href: '/blog'},
+  ];
+
+  const filteredNavLinks = user?.role === 'patient' 
+    ? [...navLinks, {key: 'nav.appointments', href: '/patient/appointments'}]
+    : navLinks;
+
+  const switchLocale = (newLocale: 'en' | 'ar') => {
+    setLocale(newLocale);
+    setIsLangOpen(false);
+  };
+
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,20 +44,6 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const switchLocale = (newLocale: 'en' | 'ar') => {
-    setLocale(newLocale);
-    setIsLangOpen(false);
-  };
-
-  const navLinks = [
-    {key: 'nav.home', href: '#', active: true},
-    {key: 'nav.aboutUs', href: '#'},
-    {key: 'nav.services', href: '#'},
-    {key: 'nav.doctors', href: '#'},
-    {key: 'nav.appointments', href: '#'},
-    {key: 'nav.blog', href: '#'},
-  ];
-
   return (
     <nav className="fixed top-0 w-full z-50 px-8 py-2">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-10 py-2 glass-card  backdrop-blur rounded-2xl shadow-lg">
@@ -50,7 +54,7 @@ const Header = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-10">
-          {navLinks.map((link, index) => (
+          {filteredNavLinks.map((link, index) => (
             <Link
               key={link.key}
               href={link.href}
@@ -154,7 +158,7 @@ const Header = () => {
             </SheetTrigger>
             <SheetContent side="right">
               <div className="flex flex-col space-y-5 mt-10">
-                {navLinks.map((link) => (
+                {filteredNavLinks.map((link) => (
                   <Button
                     key={link.key}
                     variant="outline"

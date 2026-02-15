@@ -1,17 +1,19 @@
+'use client'
+
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import {useLocale} from '@/contexts/LocaleContext';
+import Link from "next/link";
 
-interface ServicesSectionProps {
-  title?: string;
-  subtitle?: string;
+interface IProps {
+  role?: string | null;
 }
 
-const ServicesSection = (props: ServicesSectionProps) => {
+const ServicesSection = ({ role}: IProps) => {
   const {t} = useLocale();
-  const title = props.title || t('services.title');
-  const subtitle = props.subtitle || t('services.subtitle');
+  const title = t('services.title');
+  const subtitle = t('services.subtitle');
   const mentalHealthTitle = t('services.mentalHealthTitle');
   const mentalHealthDesc = t('services.mentalHealthDesc');
   const learnMore = t('services.learnMore');
@@ -65,8 +67,10 @@ const ServicesSection = (props: ServicesSectionProps) => {
               <p className="text-sm opacity-90 leading-relaxed mb-6">
                 {meetDoctorsDesc}
               </p>
-              <Button variant="secondary" className="rounded-full text-sm font-medium">
-                {bookAppointment}
+              <Button variant="secondary" asChild className="rounded-full text-sm font-medium">
+                <Link href={role == 'admin' ? '/admin/appointments' : role == 'doctor' ? '/doctors/appointments': '/patient/appointments'}>
+                  {bookAppointment}
+                </Link>
               </Button>
             </div>
           </div>

@@ -3,18 +3,16 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import {useLocale} from '@/contexts/LocaleContext';
+import Link from 'next/link';
 
-interface TechnologySectionProps {
-  title?: string;
-  subtitle?: string;
-  cta?: string;
+interface IProps {
+  role?: string | null;
 }
-
-const TechnologySection = (props: TechnologySectionProps) => {
+const TechnologySection = ({ role }: IProps) => {
   const {t} = useLocale();
-  const title = props.title || t('technology.title');
-  const subtitle = props.subtitle || t('technology.subtitle');
-  const cta = props.cta || t('technology.cta');
+  const title = t('technology.title');
+  const subtitle = t('technology.subtitle');
+  const cta = t('technology.cta');
 
   return (
     <section className="py-8 px-1 md:px-6">
@@ -39,8 +37,10 @@ const TechnologySection = (props: TechnologySectionProps) => {
             {subtitle}
           </p>
           <div>
-            <Button className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-8 py-6 rounded-full font-bold text-lg shadow-xl shadow-slate-200/50 dark:shadow-none hover:scale-105 transition-transform">
-              {cta}
+            <Button asChild className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-8 py-6 rounded-full font-bold text-lg shadow-xl shadow-slate-200/50 dark:shadow-none hover:scale-105 transition-transform">
+              <Link href={role == 'admin' ? '/admin/appointments' : role == 'doctor' ? '/doctors/appointments': '/patient/appointments'}>
+                {cta}
+              </Link>
             </Button>
           </div>
         </div>

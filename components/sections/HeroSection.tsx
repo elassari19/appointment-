@@ -8,18 +8,17 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import {useLocale} from '@/contexts/LocaleContext';
+import Link from 'next/link';
 
-interface HeroSectionProps {
-  title?: string;
-  subtitle?: string;
-  cta?: string;
+interface IProps {
+  role?: string | null;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = (props) => {
+const HeroSection = ({ role }: IProps) => {
   const {t} = useLocale();
-  const title = props.title || t('hero.title');
-  const subtitle = props.subtitle || t('hero.subtitle');
-  const cta = props.cta || t('hero.cta');
+  const title = t('hero.title');
+  const subtitle = t('hero.subtitle');
+  const cta = t('hero.cta');
 
   return (
     <section className="pt-20 px-1 md:px-6">
@@ -36,15 +35,17 @@ const HeroSection: React.FC<HeroSectionProps> = (props) => {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
               <div className="group relative">
                 <div className="-inset-0.5 group-hover:opacity-50 transition duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-pink-500 opacity-30 rounded-full absolute blur-lg" />
-                <Button variant="cta" size='icon-lg' className="w-full sm:w-auto relative">
-                  {cta}
-                  <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                <Button variant="cta" asChild size='icon-lg' className="w-full sm:w-auto relative">
+                  <Link href={role == 'admin' ? '/admin/appointments' : role == 'doctor' ? '/doctors/appointments': '/patient/appointments'}>
+                    {cta}
+                    <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Link>
                 </Button>
               </div>
-              <a className="flex items-center gap-2 font-bold group text-slate-900 dark:text-white" href="#">
+              <Link className="flex items-center gap-2 font-bold group text-slate-900 dark:text-white" href="/doctor">
                 Find a Doctor
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </Link>
             </div>
           </div>
           <div className="flex flex-col justify-end lg:pl-6 xl:pl-12">

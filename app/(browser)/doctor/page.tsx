@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
@@ -40,6 +41,17 @@ interface Pagination {
 export default function DoctorsPage() {
   const { t } = useLocale()
   const router = useRouter()
+  const { user } = useAuth()
+
+  const getBookingUrl = () => {
+    if (!user) return '/login'
+    switch (user.role) {
+      case 'patient': return '/patient/book'
+      case 'doctor': return '/doctors/appointments'
+      case 'admin': return '/admin/appointments'
+      default: return '/login'
+    }
+  }
 
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
@@ -376,7 +388,10 @@ export default function DoctorsPage() {
                     </div>
                   </div>
 
-                  <button className="w-full bg-[#f1c40f] text-slate-900 font-bold py-3.5 rounded-2xl hover:bg-[#f1c40f]/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#f1c40f]/20">
+                  <button 
+                    onClick={() => router.push(getBookingUrl())}
+                    className="w-full bg-[#f1c40f] text-slate-900 font-bold py-3.5 rounded-2xl hover:bg-[#f1c40f]/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#f1c40f]/20"
+                  >
                     {t('doctorsPage.bookAppointment')}
                     <ArrowRight size={18} />
                   </button>
