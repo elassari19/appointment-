@@ -22,6 +22,7 @@ interface Doctor {
 interface TimeSlot {
   start: string;
   end: string;
+  status?: 'available' | 'booked';
 }
 
 interface DayAvailability {
@@ -356,19 +357,27 @@ export default function BookAppointmentPage() {
 
                       {hasSlots && !isPast && (
                         <div className="mt-2 w-full space-y-1 max-h-40 overflow-y-auto">
-                          {day.slots.map((slot, slotIdx) => (
-                            <button
-                              key={slotIdx}
-                              onClick={() => {
-                                setSelectedSlot(slot);
-                                setSelectedDate(date);
-                                setStep(3);
-                              }}
-                              className="w-full py-1 px-2 text-xs bg-[#facc15]/10 hover:bg-[#facc15] hover:text-slate-900 rounded transition-colors font-medium"
-                            >
-                              {new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                            </button>
-                          ))}
+                          {day.slots.map((slot, slotIdx) => {
+                            const isBooked = slot.status === 'booked';
+                            return (
+                              <button
+                                key={slotIdx}
+                                disabled={isBooked}
+                                onClick={() => {
+                                  setSelectedSlot(slot);
+                                  setSelectedDate(date);
+                                  setStep(3);
+                                }}
+                                className={`w-full py-1 px-2 text-xs rounded transition-colors font-medium ${
+                                  isBooked
+                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed line-through'
+                                    : 'bg-[#facc15]/10 hover:bg-[#facc15] hover:text-slate-900'
+                                }`}
+                              >
+                                {new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
 

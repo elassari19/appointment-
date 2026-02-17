@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(dateStr);
       startDate.setHours(0, 0, 0, 0);
       
-      const weeklySlots: { date: string; slots: { start: Date; end: Date }[] }[] = [];
+      const weeklySlots: { date: string; slots: { start: Date; end: Date; status: 'available' | 'booked' }[] }[] = [];
       
       for (let i = 0; i < 7; i++) {
         const currentDate = new Date(startDate);
         currentDate.setDate(startDate.getDate() + i);
         
-        const availableSlots = await appointmentService.getAvailableSlots(
+        const allSlots = await appointmentService.getAllSlotsWithStatus(
           id,
           currentDate,
           dur || 60
@@ -84,20 +84,20 @@ export async function GET(request: NextRequest) {
         
         weeklySlots.push({
           date: currentDate.toISOString(),
-          slots: availableSlots,
+          slots: allSlots,
         });
       }
       
       return Response.json({ slots: weeklySlots });
     }
 
-    const availableSlots = await appointmentService.getAvailableSlots(
+    const allSlots = await appointmentService.getAllSlotsWithStatus(
       id,
       new Date(dateStr),
       dur || 60
     );
 
-    return Response.json({ slots: availableSlots });
+    return Response.json({ slots: allSlots });
   } catch (error) {
     console.error('Get availability error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

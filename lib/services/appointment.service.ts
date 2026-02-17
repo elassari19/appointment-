@@ -341,6 +341,94 @@ export class AppointmentService {
     return false;
   }
 
+  async getAllSlotsWithStatus(
+    doctorId: string,
+    date: Date,
+    duration: number = 60
+  ): Promise<{ start: Date; end: Date; status: 'available' | 'booked' }[]> {
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as DayOfWeek;
+    
+    const availabilities = await this.availabilityRepository.find({
+      where: {
+        doctor: { id: doctorId },
+        dayOfWeek,
+        isAvailable: true,
+      },
+    });
+
+    if (availabilities.length === 0) {
+      return [];
+    }
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingAppointments = await this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .where('doctor.id = :doctorId', { doctorId })
+      .andWhere('appointment.startTime >= :startOfDay', { startOfDay })
+      .andWhere('appointment.startTime <= :endOfDay', { endOfDay })
+      .andWhere('appointment.status NOT IN (:...excludedStatuses)', { 
+        excludedStatuses: [AppointmentStatus.CANCELLED] 
+      })
+      .getMany();
+
+    const allSlots: { start: Date; end: Date; status: 'available' | 'booked' }[] = [];
+
+    for (const availability of availabilities) {
+      const [availabilityStartHour, availabilityStartMin] = availability.startTime.split(':').map(Number);
+      const [availabilityEndHour, availabilityEndMin] = availability.endTime.split(':').map(Number);
+
+      const slotStart = new Date(date);
+      slotStart.setHours(availabilityStartHour, availabilityStartMin, 0, 0);
+
+      const slotEnd = new Date(date);
+      slotEnd.setHours(availabilityEndHour, availabilityEndMin, 0, 0);
+
+      while (slotStart < slotEnd) {
+        const slotTimeEnd = new Date(slotStart);
+        slotTimeEnd.setMinutes(slotTimeEnd.getMinutes() + duration);
+
+        if (slotTimeEnd > slotEnd) {
+          break;
+        }
+
+        const isBooked = existingAppointments.some((apt) => {
+          const aptEnd = new Date(apt.startTime);
+          aptEnd.setMinutes(aptEnd.getMinutes() + apt.duration);
+
+          return (
+            (slotStart >= apt.startTime && slotStart < aptEnd) ||
+            (slotTimeEnd > apt.startTime && slotTimeEnd <= aptEnd)
+          );
+        });
+
+        const isPast = slotStart <= new Date();
+
+        if (isPast) {
+          allSlots.push({
+            start: new Date(slotStart),
+            end: new Date(slotTimeEnd),
+            status: 'booked',
+          });
+        } else {
+          allSlots.push({
+            start: new Date(slotStart),
+            end: new Date(slotTimeEnd),
+            status: isBooked ? 'booked' : 'available',
+          });
+        }
+
+        slotStart.setMinutes(slotStart.getMinutes() + duration);
+      }
+    }
+
+    return allSlots;
+  }
+
   async getAvailableSlots(
     doctorId: string,
     date: Date,
