@@ -116,6 +116,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'monitoring'>('overview');
   const [chartView, setChartView] = useState<'month' | 'week'>('month');
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     async function fetchAnalytics() {
@@ -130,7 +131,21 @@ export default function AdminDashboardPage() {
         setLoading(false);
       }
     }
+
+    async function fetchNotificationCount() {
+      try {
+        const response = await fetch('/api/notifications?limit=1');
+        if (response.ok) {
+          const result = await response.json();
+          setNotificationCount(result.unreadCount || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch notification count:', err);
+      }
+    }
+
     fetchAnalytics();
+    fetchNotificationCount();
   }, []);
 
   if (loading) {
@@ -207,7 +222,9 @@ export default function AdminDashboardPage() {
           </div>
           <button className="w-11 h-11 flex items-center justify-center bg-card border border-border rounded-xl hover:bg-muted transition-all relative">
             <span className="material-icons-round text-muted-foreground">notifications</span>
-            <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-card"></span>
+            {notificationCount > 0 && (
+              <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-card"></span>
+            )}
           </button>
           <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center font-bold text-primary-foreground">A</div>
         </div>

@@ -95,6 +95,7 @@ export default function PatientDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const fetchDashboardData = async () => {
     try {
@@ -111,8 +112,21 @@ export default function PatientDashboardPage() {
     }
   };
 
+  const fetchNotificationCount = async () => {
+    try {
+      const response = await fetch('/api/notifications?limit=1');
+      if (response.ok) {
+        const result = await response.json();
+        setNotificationCount(result.unreadCount || 0);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notification count:', err);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchNotificationCount();
   }, []);
 
   const handleJoinMeeting = () => {
@@ -291,7 +305,7 @@ export default function PatientDashboardPage() {
       <DashboardHeader
         title={messages.title}
         subtitle={messages.subtitle}
-        notificationCount={0}
+        notificationCount={notificationCount}
       />
 
       {/* Stats Grid */}

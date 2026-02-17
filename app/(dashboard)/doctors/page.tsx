@@ -64,6 +64,7 @@ export default function DietitianDashboardPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview');
+  const [notificationCount, setNotificationCount] = useState(0);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const now = new Date();
     const day = now.getDay();
@@ -86,8 +87,21 @@ export default function DietitianDashboardPage() {
     }
   };
 
+  const fetchNotificationCount = async () => {
+    try {
+      const response = await fetch('/api/notifications?limit=1');
+      if (response.ok) {
+        const result = await response.json();
+        setNotificationCount(result.unreadCount || 0);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notification count:', err);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchNotificationCount();
   }, []);
 
   const handleAppointmentAction = async () => {
@@ -248,6 +262,7 @@ export default function DietitianDashboardPage() {
         title="Welcome back, Doctor"
         subtitle="Here's your schedule and patient updates for today."
         searchPlaceholder="Search patients..."
+        notificationCount={notificationCount}
       />
 
       <div className="flex gap-4 mb-8 border-b border-border">
