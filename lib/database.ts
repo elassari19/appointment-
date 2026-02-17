@@ -16,21 +16,18 @@ import { IdempotencyKey } from './entities/IdempotencyKey';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'appoinpment',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  url: process.env.DATABASE_URL,
+  schema: 'public',
+  ssl: { rejectUnauthorized: false },
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
   entities: [User, Session, Appointment, Availability, Payment, AuditLog, BlockedSlot, DoctorProfile, Review, Conversation, Message, Notification, NotificationPreference, Report, IdempotencyKey],
   migrations: [__dirname + '/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {
-    max: 20,
-    min: 5,
+    max: 5,
+    min: 1,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
   },
 });
