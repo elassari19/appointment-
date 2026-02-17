@@ -7,6 +7,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
+import { User } from './User';
 
 export interface EducationEntry {
   institution: string;
@@ -61,7 +62,7 @@ export class DoctorProfile {
   @Column({ type: 'uuid', unique: true })
   userId!: string;
 
-  @OneToOne('User', { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()
   user!: any;
 
