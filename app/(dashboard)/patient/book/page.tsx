@@ -24,6 +24,11 @@ interface TimeSlot {
   end: string;
 }
 
+interface DayAvailability {
+  date: string;
+  slots: TimeSlot[];
+}
+
 export default function BookAppointmentPage() {
   const { t } = useLocale();
   const router = useRouter();
@@ -31,6 +36,7 @@ export default function BookAppointmentPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [weeklySlots, setWeeklySlots] = useState<DayAvailability[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [notes, setNotes] = useState('');
@@ -65,11 +71,11 @@ export default function BookAppointmentPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/appointments/availability?doctorId=${doctorId}&date=${date.toISOString()}`
+        `/api/appointments/availability?doctorId=${doctorId}&date=${date.toISOString()}&week=true`
       );
       if (response.ok) {
         const data = await response.json();
-        setAvailableSlots(data.slots || []);
+        setWeeklySlots(data.slots || []);
       }
     } catch (err) {
       console.error('Failed to fetch availability:', err);
@@ -87,9 +93,9 @@ export default function BookAppointmentPage() {
   const handleDateChange = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
     if (direction === 'prev') {
-      newDate.setDate(newDate.getDate() - 1);
+      newDate.setDate(newDate.getDate() - 7);
     } else {
-      newDate.setDate(newDate.getDate() + 1);
+      newDate.setDate(newDate.getDate() + 7);
     }
     setSelectedDate(newDate);
     if (selectedDoctor) {
@@ -162,6 +168,22 @@ export default function BookAppointmentPage() {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const formatWeekRange = (date: Date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    const startMonth = startOfWeek.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = endOfWeek.toLocaleDateString('en-US', { month: 'short' });
+    
+    if (startMonth === endMonth) {
+      return `${startOfWeek.getDate()} - ${endOfWeek.getDate()} ${startMonth} ${startOfWeek.getFullYear()}`;
+    }
+    return `${startOfWeek.getDate()} ${startMonth} - ${endOfWeek.getDate()} ${endMonth} ${startOfWeek.getFullYear()}`;
   };
 
   return (
@@ -281,18 +303,16 @@ export default function BookAppointmentPage() {
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[#1e293b] mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#facc15]" />
-              Select Date
-            </h3>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <button
                 onClick={() => handleDateChange('prev')}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="font-medium text-[#1e293b]">{formatDate(selectedDate)}</span>
+              <h3 className="text-lg font-semibold text-[#1e293b]">
+                {formatWeekRange(selectedDate)}
+              </h3>
               <button
                 onClick={() => handleDateChange('next')}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -301,32 +321,64 @@ export default function BookAppointmentPage() {
               </button>
             </div>
 
-            <h4 className="text-md font-semibold text-[#1e293b] mb-3 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-[#facc15]" />
-              Available Slots
-            </h4>
-            
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-[#facc15]" />
               </div>
-            ) : availableSlots.length > 0 ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {availableSlots.map((slot, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setSelectedSlot(slot);
-                      setStep(3);
-                    }}
-                    className="py-2 px-3 border border-slate-200 rounded-lg hover:border-[#facc15] hover:bg-[#facc15]/10 transition-colors text-sm font-medium"
-                  >
-                    {new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  </button>
-                ))}
-              </div>
             ) : (
-              <p className="text-slate-500 text-center py-4">No available slots for this date</p>
+              <div className="grid grid-cols-7 gap-2">
+                {weeklySlots.map((day, idx) => {
+                  const date = new Date(day.date);
+                  const isToday = date.toDateString() === new Date().toDateString();
+                  const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+                  const hasSlots = day.slots.length > 0;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex flex-col items-center p-3 rounded-xl border ${
+                        isPast
+                          ? 'border-slate-100 bg-slate-50 opacity-50'
+                          : hasSlots
+                          ? 'border-slate-200 hover:border-[#facc15] bg-white'
+                          : 'border-slate-100 bg-slate-50'
+                      } transition-colors`}
+                    >
+                      <span className="text-xs font-medium text-slate-500">
+                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                      </span>
+                      <span className={`text-lg font-bold ${isToday ? 'text-[#facc15]' : 'text-[#1e293b]'}`}>
+                        {date.getDate()}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {date.toLocaleDateString('en-US', { month: 'short' })}
+                      </span>
+
+                      {hasSlots && !isPast && (
+                        <div className="mt-2 w-full space-y-1 max-h-40 overflow-y-auto">
+                          {day.slots.map((slot, slotIdx) => (
+                            <button
+                              key={slotIdx}
+                              onClick={() => {
+                                setSelectedSlot(slot);
+                                setSelectedDate(date);
+                                setStep(3);
+                              }}
+                              className="w-full py-1 px-2 text-xs bg-[#facc15]/10 hover:bg-[#facc15] hover:text-slate-900 rounded transition-colors font-medium"
+                            >
+                              {new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {!hasSlots && !isPast && (
+                        <span className="mt-2 text-xs text-slate-400">No slots</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>

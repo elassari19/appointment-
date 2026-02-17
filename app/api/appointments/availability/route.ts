@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     const doctorId = searchParams.get('doctorId');
     const date = searchParams.get('date');
     const duration = searchParams.get('duration');
+    const week = searchParams.get('week') === 'true';
 
     if (!doctorId || !date) {
       return Response.json(
@@ -64,6 +65,31 @@ export async function GET(request: NextRequest) {
     }
 
     const { doctorId: id, date: dateStr, duration: dur } = validationResult.data;
+
+    if (week) {
+      const startDate = new Date(dateStr);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const weeklySlots: { date: string; slots: { start: Date; end: Date }[] }[] = [];
+      
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        
+        const availableSlots = await appointmentService.getAvailableSlots(
+          id,
+          currentDate,
+          dur || 60
+        );
+        
+        weeklySlots.push({
+          date: currentDate.toISOString(),
+          slots: availableSlots,
+        });
+      }
+      
+      return Response.json({ slots: weeklySlots });
+    }
 
     const availableSlots = await appointmentService.getAvailableSlots(
       id,
