@@ -9,6 +9,8 @@ import {
 } from 'typeorm';
 import { Session } from './Session';
 import { DoctorProfile } from './DoctorProfile';
+import { Appointment } from './Appointment';
+import { Availability } from './Availability';
 
 export enum UserRole {
   PATIENT = 'patient',
@@ -104,17 +106,17 @@ export class User {
   updatedAt!: Date;
 
   // Relationships
-  @OneToMany('Appointment', 'patient', {
+  @OneToMany(() => Appointment, 'patient', {
     cascade: true,
   })
   patientAppointments!: any[];
 
-  @OneToMany('Appointment', 'doctor', {
+  @OneToMany(() => Appointment, 'doctor', {
     cascade: true,
   })
   doctorAppointments!: any[];
 
-  @OneToMany('Availability', 'doctor', {
+  @OneToMany(() => Availability, 'doctor', {
     cascade: true,
   })
   availabilities!: any[];
