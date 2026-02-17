@@ -3,6 +3,8 @@ import { AppointmentService, CreateAppointmentWithMeetData } from '@/lib/service
 import { AuthService } from '@/lib/services/auth.service';
 import { DatabaseService } from '@/lib/services/database.service';
 import { NotificationService } from '@/lib/services/notification.service';
+import { AppDataSource } from '@/lib/database';
+import { Appointment } from '@/lib/entities/Appointment';
 import { z } from 'zod';
 
 const appointmentService = new AppointmentService();
@@ -91,9 +93,16 @@ export async function POST(request: NextRequest) {
         notes,
       });
 
+      const meetingCode = Math.random().toString(36).substring(2, 12);
+      const meetingLink = `https://meet.jit.si/appointment-${meetingCode}`;
+      
+      const appointmentRepo = AppDataSource.getRepository(Appointment);
+      appointmentResult.appointment.meetingLink = meetingLink;
+      await appointmentRepo.save(appointmentResult.appointment);
+
       result = {
         appointment: appointmentResult.appointment,
-        meetingLink: undefined,
+        meetingLink,
         calendarEventId: undefined,
       };
     }

@@ -154,7 +154,8 @@ export class AppointmentService {
 
         await this.appointmentRepository.save(savedAppointment);
       } else {
-        const fallbackLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 11)}`;
+        const meetingCode = Math.random().toString(36).substring(2, 12);
+        const fallbackLink = `https://meet.jit.si/appointment-${meetingCode}`;
         savedAppointment.meetingLink = fallbackLink;
         await this.appointmentRepository.save(savedAppointment);
         meetingLink = fallbackLink;

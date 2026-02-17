@@ -11,6 +11,7 @@ interface AppointmentCardProps {
   description: string;
   type: string;
   duration: string;
+  meetingUrl?: string | null;
   onJoin?: () => void;
   onReschedule?: () => void;
 }
@@ -24,6 +25,7 @@ export function AppointmentCard({
   description,
   type,
   duration,
+  meetingUrl,
   onJoin,
   onReschedule,
 }: AppointmentCardProps) {

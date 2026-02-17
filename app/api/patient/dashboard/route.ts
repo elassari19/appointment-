@@ -83,8 +83,9 @@ export async function GET(request: NextRequest) {
           ? `${nextAppointment.doctor.firstName.charAt(0)}${nextAppointment.doctor.lastName.charAt(0)}`.toUpperCase()
           : 'DR',
         description: nextAppointment.notes || 'Appointment scheduled',
-        type: nextAppointment.duration >= 60 ? 'In-Person' : 'Video Call',
+        type: 'Video Call',
         duration: `${nextAppointment.duration} Minutes`,
+        meetingUrl: nextAppointment.meetingLink || null,
       } : null,
       upcomingAppointments: upcomingAppointments.map(apt => ({
         id: apt.id,

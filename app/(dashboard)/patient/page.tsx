@@ -26,6 +26,7 @@ interface NextAppointment {
   description: string;
   type: string;
   duration: string;
+  meetingUrl: string | null;
 }
 
 interface DashboardData {
@@ -113,7 +114,19 @@ export default function PatientDashboardPage() {
   }, []);
 
   const handleJoinMeeting = () => {
-    console.log('Joining meeting...');
+    const appointment = data?.nextAppointment;
+    if (!appointment) return;
+
+    if (appointment.type === 'In-Person') {
+      alert('This is an in-person appointment. Please visit the clinic at the scheduled time.');
+      return;
+    }
+
+    if (appointment.meetingUrl) {
+      window.open(appointment.meetingUrl, '_blank');
+    } else {
+      alert('No meeting link available for this appointment.');
+    }
   };
 
   const handleReschedule = () => {
@@ -311,6 +324,7 @@ export default function PatientDashboardPage() {
                 description={data.nextAppointment.description}
                 type={data.nextAppointment.type}
                 duration={data.nextAppointment.duration}
+                meetingUrl={data.nextAppointment.meetingUrl}
                 onJoin={handleJoinMeeting}
                 onReschedule={handleReschedule}
               />
