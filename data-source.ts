@@ -17,17 +17,19 @@ import { IdempotencyKey } from './lib/entities/IdempotencyKey';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  schema: 'public',
+  ssl: { rejectUnauthorized: false },
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
   entities: [User, Session, Appointment, Availability, Payment, AuditLog, BlockedSlot, DoctorProfile, Review, Conversation, Message, Notification, NotificationPreference, Report, IdempotencyKey],
   migrations: [__dirname + '/lib/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {
-    max: 20,
-    min: 5,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    max: 1,
+    min: 0,
+    idleTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
+    idle_session_timeout: 5000,
   },
 });
 

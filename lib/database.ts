@@ -25,9 +25,10 @@ export const AppDataSource = new DataSource({
   migrations: [__dirname + '/migrations/*{.js,.ts}'],
   subscribers: [],
   extra: {
-    max: 5,
-    min: 1,
-    idleTimeoutMillis: 30000,
+    max: 1,
+    min: 0,
+    idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 10000,
+    idle_session_timeout: 5000,
   },
 });

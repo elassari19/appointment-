@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { User } from './User';
 import { Appointment } from './Appointment';
 
 export enum ReviewStatus {
@@ -24,14 +25,14 @@ export class Review {
   @Column({ type: 'uuid' })
   doctorId!: string;
 
-  @ManyToOne('User', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()
   doctor!: any;
 
   @Column({ type: 'uuid' })
   patientId!: string;
 
-  @ManyToOne('User', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()
   patient!: any;
 

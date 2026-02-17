@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { Appointment } from './Appointment';
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -63,7 +64,7 @@ export class Payment {
   updatedAt!: Date;
 
   // Relationships
-  @ManyToOne('Appointment', 'payments', {
+  @ManyToOne(() => Appointment, 'payments', {
     eager: false,
     onDelete: 'CASCADE',
   })
