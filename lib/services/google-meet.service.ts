@@ -50,7 +50,7 @@ export class GoogleMeetService {
   }
 
   private generateRequestId(): string {
-    return `nutrison${Date.now()}${Math.random().toString(36).substring(2, 9)}`;
+    return `nm${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`;
   }
 
   async createMeetMeeting(params: CreateMeetParams): Promise<MeetSyncResult> {

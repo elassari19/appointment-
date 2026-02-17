@@ -170,23 +170,27 @@ export class GoogleCalendarService {
   private async makeRequest(
     endpoint: string,
     method: string = 'GET',
-    body?: any
+    body?: any,
+    queryParams?: Record<string, string>
   ): Promise<any> {
     if (!this.isAuthenticated()) {
       throw new Error('Not authenticated with Google Calendar');
     }
 
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3${endpoint}`,
-      {
-        method,
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      }
-    );
+    let url = `https://www.googleapis.com/calendar/v3${endpoint}`;
+    if (queryParams && Object.keys(queryParams).length > 0) {
+      const params = new URLSearchParams(queryParams);
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -200,7 +204,6 @@ export class GoogleCalendarService {
     try {
       const result = await this.makeRequest('/calendars/primary/events', 'POST', {
         ...event,
-        conferenceDataVersion: 1,
         reminders: {
           useDefault: false,
           overrides: [
@@ -208,7 +211,7 @@ export class GoogleCalendarService {
             { method: 'popup', minutes: 30 },
           ],
         },
-      });
+      }, { conferenceDataVersion: '1' });
 
       return {
         success: true,
@@ -226,10 +229,9 @@ export class GoogleCalendarService {
     try {
       const eventWithMeet = {
         ...event,
-        conferenceDataVersion: 1,
         conferenceData: event.conferenceData || {
           createRequest: {
-            requestId: `nutrison${Date.now()}${Math.random().toString(36).substring(2, 9)}`,
+            requestId: `nm${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`,
             conferenceSolutionKey: {
               type: 'hangoutsMeet',
             },
@@ -244,7 +246,7 @@ export class GoogleCalendarService {
         },
       };
 
-      const result = await this.makeRequest('/calendars/primary/events', 'POST', eventWithMeet);
+      const result = await this.makeRequest('/calendars/primary/events', 'POST', eventWithMeet, { conferenceDataVersion: '1' });
 
       let meetingLink = result.conferenceData?.entryPoints?.find(
         (ep: any) => ep.entryPointType === 'video'
