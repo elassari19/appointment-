@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') as AppointmentStatus | null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const doctorId = searchParams.get('doctorId');
 
     const filters: AppointmentFilters = {};
 
@@ -66,14 +67,17 @@ export async function GET(request: NextRequest) {
     if (endDate) {
       filters.endDate = new Date(endDate);
     }
+    if (doctorId) {
+      filters.doctorId = doctorId;
+    }
 
     const userIsDoctor = await isDoctor(userResult.userId);
     const userIsAdmin = userResult.role === 'admin';
 
     if (!userIsAdmin) {
-      if (userIsDoctor) {
+      if (userIsDoctor && !doctorId) {
         filters.doctorId = userResult.userId;
-      } else {
+      } else if (!userIsDoctor) {
         filters.patientId = userResult.userId;
       }
     }
