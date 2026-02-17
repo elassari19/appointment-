@@ -13,6 +13,11 @@ const updateStatusSchema = z.object({
   reason: z.string().optional(),
 });
 
+const rescheduleSchema = z.object({
+  startTime: z.string().datetime('Invalid start time'),
+  duration: z.number().min(15).optional(),
+});
+
 async function getUserFromRequest(request: NextRequest): Promise<{ userId: string } | null> {
   const token = request.cookies.get('session_token')?.value ||
     request.headers.get('authorization')?.replace('Bearer ', '');
@@ -124,5 +129,51 @@ export async function DELETE(
   } catch (error) {
     console.error('Cancel appointment error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await DatabaseService.initialize();
+
+    const userResult = await getUserFromRequest(request);
+    if (!userResult) {
+      return Response.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const validationResult = rescheduleSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return Response.json(
+        { error: validationResult.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { startTime, duration } = validationResult.data;
+
+    const appointment = await appointmentService.rescheduleAppointment(
+      id,
+      new Date(startTime),
+      duration
+    );
+
+    if (!appointment) {
+      return Response.json(
+        { error: 'Appointment not found or time slot not available' },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({ appointment });
+  } catch (error) {
+    console.error('Reschedule appointment error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return Response.json({ error: message }, { status: 400 });
   }
 }

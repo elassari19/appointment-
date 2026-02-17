@@ -14,6 +14,7 @@ import {
   DataTable,
   Section,
 } from '@/components/dashboard';
+import { RescheduleModal } from '@/components/RescheduleModal';
 
 interface NextAppointment {
   id: string;
@@ -93,23 +94,24 @@ export default function PatientDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/patient/dashboard');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch('/api/patient/dashboard');
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
@@ -130,7 +132,11 @@ export default function PatientDashboardPage() {
   };
 
   const handleReschedule = () => {
-    console.log('Rescheduling appointment...');
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleSuccess = () => {
+    fetchDashboardData();
   };
 
   const handleBookNewVisit = () => {
@@ -361,6 +367,22 @@ export default function PatientDashboardPage() {
           </Section>
         </div>
       </div>
+
+      <RescheduleModal
+        appointment={data?.nextAppointment ? {
+          id: data.nextAppointment.id,
+          startTime: data.nextAppointment.date,
+          duration: parseInt(data.nextAppointment.duration) || 30,
+          doctor: {
+            firstName: data.nextAppointment.doctorName.replace('Dr. ', '').split(' ')[0] || '',
+            lastName: data.nextAppointment.doctorName.replace('Dr. ', '').split(' ').slice(1).join(' ') || '',
+            specialty: data.nextAppointment.specialty,
+          },
+        } : null}
+        isOpen={showRescheduleModal}
+        onClose={() => setShowRescheduleModal(false)}
+        onSuccess={handleRescheduleSuccess}
+      />
     </div>
   );
 }

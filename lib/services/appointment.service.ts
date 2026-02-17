@@ -271,6 +271,42 @@ export class AppointmentService {
     return await this.appointmentRepository.save(appointment);
   }
 
+  async rescheduleAppointment(id: string, newStartTime: Date, newDuration?: number): Promise<Appointment | null> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return null;
+    }
+
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id },
+      relations: ['doctor'],
+    });
+
+    if (!appointment) {
+      return null;
+    }
+
+    const newEndTime = new Date(newStartTime);
+    newEndTime.setMinutes(newEndTime.getMinutes() + (newDuration || appointment.duration));
+
+    const hasConflict = await this.checkAvailability(
+      appointment.doctor.id,
+      newStartTime,
+      newEndTime
+    );
+
+    if (hasConflict) {
+      throw new Error('The selected time slot is not available');
+    }
+
+    appointment.startTime = newStartTime;
+    if (newDuration) {
+      appointment.duration = newDuration;
+    }
+
+    return await this.appointmentRepository.save(appointment);
+  }
+
   async checkAvailability(
     doctorId: string,
     startTime: Date,
