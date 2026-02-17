@@ -1,9 +1,10 @@
 import { AppDataSource } from '@/lib/database';
-import { User } from '@/lib/entities/User';
+import { User, UserRole } from '@/lib/entities/User';
 import { Appointment } from '@/lib/entities/Appointment';
 import { Notification, NotificationType } from '@/lib/entities/Notification';
 import { NotificationPreference } from '@/lib/entities/NotificationPreference';
 import { emailService } from './email.service';
+import { notificationWebSocketService } from './notification-websocket.service';
 
 export { NotificationType };
 
@@ -33,7 +34,8 @@ export class NotificationService {
     type: NotificationType,
     title: string,
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    sendRealTime: boolean = true
   ): Promise<Notification> {
     const notification = new Notification();
     notification.userId = userId;
@@ -42,7 +44,13 @@ export class NotificationService {
     notification.message = message;
     notification.metadata = metadata;
 
-    return await this.notificationRepository.save(notification);
+    const savedNotification = await this.notificationRepository.save(notification);
+
+    if (sendRealTime) {
+      notificationWebSocketService.sendRealTimeNotification(userId, savedNotification);
+    }
+
+    return savedNotification;
   }
 
   async sendAppointmentConfirmation(appointment: Appointment): Promise<void> {
@@ -73,6 +81,8 @@ export class NotificationService {
       }
     );
 
+    await this.notifyAdminNewAppointment(appointment, patient, doctor);
+
     try {
       await emailService.sendAppointmentConfirmation({
         to: patient.email,
@@ -82,6 +92,17 @@ export class NotificationService {
         duration: appointment.duration,
         meetingLink: appointment.meetingLink || undefined,
         notes: appointment.notes || undefined,
+      });
+
+      await emailService.sendDoctorAppointmentNotification({
+        to: doctor.email,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        appointmentDate: appointment.startTime,
+        duration: appointment.duration,
+        meetingLink: appointment.meetingLink || undefined,
+        notes: appointment.notes || undefined,
+        action: 'created',
       });
     } catch (emailError) {
       console.error('Failed to send appointment confirmation email:', emailError);
@@ -138,6 +159,30 @@ export class NotificationService {
         reason,
       }
     );
+
+    await this.notifyAdminCancellation(appointment, patient, doctor, reason);
+
+    try {
+      await emailService.sendAppointmentCancellation({
+        to: patient.email,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        appointmentDate: appointment.startTime,
+        reason,
+      });
+
+      await emailService.sendDoctorAppointmentNotification({
+        to: doctor.email,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        appointmentDate: appointment.startTime,
+        duration: appointment.duration,
+        action: 'cancelled',
+        reason,
+      });
+    } catch (emailError) {
+      console.error('Failed to send cancellation notification email:', emailError);
+    }
   }
 
   async sendMeetingLink(appointment: Appointment): Promise<void> {
@@ -228,5 +273,144 @@ export class NotificationService {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  async getAdminUserIds(): Promise<string[]> {
+    const admins = await this.userRepository.find({
+      where: { role: UserRole.ADMIN },
+      select: ['id'],
+    });
+    return admins.map(admin => admin.id);
+  }
+
+  async notifyAdminNewAppointment(appointment: Appointment, patient: User, doctor: User): Promise<void> {
+    const adminIds = await this.getAdminUserIds();
+
+    for (const adminId of adminIds) {
+      await this.createNotification(
+        adminId,
+        NotificationType.APPOINTMENT_CONFIRMATION,
+        'New Appointment Booked',
+        `Patient ${patient.firstName} ${patient.lastName} booked an appointment with Dr. ${doctor.firstName} ${doctor.lastName} on ${this.formatDateTime(appointment.startTime)}.`,
+        {
+          appointmentId: appointment.id,
+          startTime: appointment.startTime,
+          patientId: patient.id,
+          doctorId: doctor.id,
+        }
+      );
+    }
+  }
+
+  async notifyAdminCancellation(appointment: Appointment, patient: User, doctor: User, reason?: string): Promise<void> {
+    const adminIds = await this.getAdminUserIds();
+
+    const reasonText = reason ? ` Reason: ${reason}` : '';
+
+    for (const adminId of adminIds) {
+      await this.createNotification(
+        adminId,
+        NotificationType.APPOINTMENT_CANCELLED,
+        'Appointment Cancelled',
+        `Patient ${patient.firstName} ${patient.lastName} cancelled their appointment with Dr. ${doctor.firstName} ${doctor.lastName} on ${this.formatDateTime(appointment.startTime)}.${reasonText}`,
+        {
+          appointmentId: appointment.id,
+          startTime: appointment.startTime,
+          patientId: patient.id,
+          doctorId: doctor.id,
+          reason,
+        }
+      );
+    }
+  }
+
+  async sendAppointmentRescheduled(
+    appointment: Appointment,
+    oldStartTime: Date,
+    reason?: string
+  ): Promise<void> {
+    const patient = appointment.patient as User;
+    const doctor = appointment.doctor as User;
+
+    await this.createNotification(
+      patient.id,
+      NotificationType.APPOINTMENT_RESCHEDULED,
+      'Appointment Rescheduled',
+      `Your appointment with ${doctor.firstName} ${doctor.lastName} has been rescheduled to ${this.formatDateTime(appointment.startTime)}.`,
+      {
+        appointmentId: appointment.id,
+        oldStartTime,
+        newStartTime: appointment.startTime,
+        doctorId: doctor.id,
+        reason,
+      }
+    );
+
+    await this.createNotification(
+      doctor.id,
+      NotificationType.APPOINTMENT_RESCHEDULED,
+      'Appointment Rescheduled',
+      `Your appointment with ${patient.firstName} ${patient.lastName} has been rescheduled to ${this.formatDateTime(appointment.startTime)}.`,
+      {
+        appointmentId: appointment.id,
+        oldStartTime,
+        newStartTime: appointment.startTime,
+        patientId: patient.id,
+        reason,
+      }
+    );
+
+    await this.notifyAdminRescheduled(appointment, patient, doctor, oldStartTime);
+
+    try {
+      await emailService.sendAppointmentRescheduled({
+        to: patient.email,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        oldDate: oldStartTime,
+        newDate: appointment.startTime,
+        duration: appointment.duration,
+        meetingLink: appointment.meetingLink || undefined,
+        reason,
+      });
+
+      await emailService.sendDoctorAppointmentNotification({
+        to: doctor.email,
+        doctorName: `${doctor.firstName} ${doctor.lastName}`,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        appointmentDate: appointment.startTime,
+        duration: appointment.duration,
+        meetingLink: appointment.meetingLink || undefined,
+        action: 'rescheduled',
+        oldDate: oldStartTime,
+      });
+    } catch (emailError) {
+      console.error('Failed to send reschedule notification email:', emailError);
+    }
+  }
+
+  async notifyAdminRescheduled(
+    appointment: Appointment,
+    patient: User,
+    doctor: User,
+    oldStartTime: Date
+  ): Promise<void> {
+    const adminIds = await this.getAdminUserIds();
+
+    for (const adminId of adminIds) {
+      await this.createNotification(
+        adminId,
+        NotificationType.APPOINTMENT_RESCHEDULED,
+        'Appointment Rescheduled',
+        `Patient ${patient.firstName} ${patient.lastName} rescheduled their appointment with Dr. ${doctor.firstName} ${doctor.lastName} from ${this.formatDateTime(oldStartTime)} to ${this.formatDateTime(appointment.startTime)}.`,
+        {
+          appointmentId: appointment.id,
+          oldStartTime,
+          newStartTime: appointment.startTime,
+          patientId: patient.id,
+          doctorId: doctor.id,
+        }
+      );
+    }
   }
 }

@@ -5,6 +5,7 @@ import type {Locale} from '@/contexts/LocaleContext';
 import { cookies } from 'next/headers'
 import { getServerUser } from '@/lib/middleware/role-protection';
 import { notFound } from 'next/navigation';
+import { NotificationListener } from '@/components/NotificationListener';
 
 export default async function DietitianDashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default async function DietitianDashboardLayout({
           <DashboardLayout role="doctor">
             {children}
           </DashboardLayout>
+          <NotificationListener />
         </div>
       </AuthProvider>
     </LocaleProvider>

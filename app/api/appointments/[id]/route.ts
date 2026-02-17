@@ -2,11 +2,13 @@ import { NextRequest } from 'next/server';
 import { AppointmentService } from '@/lib/services/appointment.service';
 import { DatabaseService } from '@/lib/services/database.service';
 import { AuthService } from '@/lib/services/auth.service';
+import { NotificationService } from '@/lib/services/notification.service';
 import { AppointmentStatus } from '@/lib/entities/Appointment';
 import { z } from 'zod';
 
 const appointmentService = new AppointmentService();
 const authService = new AuthService();
+const notificationService = new NotificationService();
 
 const updateStatusSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -87,7 +89,19 @@ export async function PATCH(
 
     let appointment;
     if (status === AppointmentStatus.CANCELLED) {
-      appointment = await appointmentService.cancelAppointment(id, reason);
+      const existingAppointment = await appointmentService.getAppointmentById(id);
+      if (existingAppointment) {
+        appointment = await appointmentService.cancelAppointment(id, reason);
+        if (appointment) {
+          try {
+            await notificationService.sendCancellationNotice(existingAppointment, reason);
+          } catch (notificationError) {
+            console.error('Failed to send cancellation notification:', notificationError);
+          }
+        }
+      } else {
+        appointment = null;
+      }
     } else {
       appointment = await appointmentService.updateAppointmentStatus(id, status);
     }
@@ -119,10 +133,21 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const reason = searchParams.get('reason') || undefined;
 
+    const existingAppointment = await appointmentService.getAppointmentById(id);
+    if (!existingAppointment) {
+      return Response.json({ error: 'Appointment not found' }, { status: 404 });
+    }
+
     const appointment = await appointmentService.cancelAppointment(id, reason);
 
     if (!appointment) {
       return Response.json({ error: 'Appointment not found' }, { status: 404 });
+    }
+
+    try {
+      await notificationService.sendCancellationNotice(existingAppointment, reason);
+    } catch (notificationError) {
+      console.error('Failed to send cancellation notification:', notificationError);
     }
 
     return Response.json({ message: 'Appointment cancelled successfully' });
@@ -157,6 +182,16 @@ export async function PUT(
 
     const { startTime, duration } = validationResult.data;
 
+    const existingAppointment = await appointmentService.getAppointmentById(id);
+    if (!existingAppointment) {
+      return Response.json(
+        { error: 'Appointment not found' },
+        { status: 404 }
+      );
+    }
+
+    const oldStartTime = new Date(existingAppointment.startTime);
+
     const appointment = await appointmentService.rescheduleAppointment(
       id,
       new Date(startTime),
@@ -168,6 +203,12 @@ export async function PUT(
         { error: 'Appointment not found or time slot not available' },
         { status: 404 }
       );
+    }
+
+    try {
+      await notificationService.sendAppointmentRescheduled(appointment, oldStartTime);
+    } catch (notificationError) {
+      console.error('Failed to send reschedule notification:', notificationError);
     }
 
     return Response.json({ appointment });
