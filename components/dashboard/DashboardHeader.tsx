@@ -2,10 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Bell, Search, Globe, User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Bell, Search, Globe, User, LogOut, Settings, ChevronDown, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useRouter } from 'next/navigation';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  type: string;
+}
 
 interface DashboardHeaderProps {
   title?: string;
@@ -14,6 +25,7 @@ interface DashboardHeaderProps {
   searchPlaceholder?: string;
   notificationCount?: number;
   onSearch?: (query: string) => void;
+  userRole?: 'patient' | 'doctor' | 'admin';
 }
 
 export function DashboardHeader({
@@ -27,6 +39,9 @@ export function DashboardHeader({
   const [searchValue, setSearchValue] = useState('');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   
@@ -46,6 +61,76 @@ export function DashboardHeader({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const fetchNotifications = async () => {
+    setIsLoadingNotifications(true);
+    try {
+      const response = await fetch('/api/notifications?limit=20');
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  const handleNotificationClick = () => {
+    setIsNotificationsOpen(true);
+    fetchNotifications();
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await fetch(`/api/notifications?id=${notificationId}`, { method: 'PATCH' });
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await fetch('/api/notifications?markAll=true', { method: 'PATCH' });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'appointment_confirmed':
+      case 'success':
+        return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+      case 'appointment_cancelled':
+      case 'cancelled':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      case 'reminder':
+        return <AlertCircle className="h-5 w-5 text-amber-500" />;
+      default:
+        return <Bell className="h-5 w-5 text-muted-foreground" />;
+    }
+  };
+
+  const formatNotificationTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
@@ -112,7 +197,10 @@ export function DashboardHeader({
           )}
         </div>
 
-        <button className="p-2.5 bg-card border border-border rounded-xl relative hover:bg-muted transition-colors">
+        <button 
+          onClick={handleNotificationClick}
+          className="p-2.5 bg-card border border-border rounded-xl relative hover:bg-muted transition-colors"
+        >
           <Bell className="h-5 w-5 text-muted-foreground" />
           {notificationCount > 0 && (
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -159,6 +247,66 @@ export function DashboardHeader({
           )}
         </div>
       </div>
+
+      <Sheet open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-xl font-bold">Notifications</SheetTitle>
+              {notifications.some(n => !n.read) && (
+                <button 
+                  onClick={markAllAsRead}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            {isLoadingNotifications ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : notifications.length > 0 ? (
+              <div className="divide-y divide-border">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => !notification.read && markAsRead(notification.id)}
+                    className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${
+                      !notification.read ? 'bg-primary/5' : ''
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className="shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-foreground">{notification.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {formatNotificationTime(notification.createdAt)}
+                        </p>
+                      </div>
+                      {!notification.read && (
+                        <div className="shrink-0">
+                          <span className="w-2 h-2 bg-primary rounded-full"></span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Bell className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">No notifications yet</p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }
