@@ -4,6 +4,9 @@ import { Button } from "../ui/button";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import {useLocale} from '@/contexts/LocaleContext';
+import { useGSAP } from "@/lib/gsap-animations";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 interface KeyServicesSectionProps {
   title?: string;
@@ -45,19 +48,44 @@ const KeyServicesSection = (props: KeyServicesSectionProps) => {
   const stayProactive = props.stayProactive || t('keyServices.stayProactive');
   const bookLink = props.bookLink || t('keyServices.bookLink');
 
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.key-services-title',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.key-services-title', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.key-services-subtitle',
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.key-services-subtitle', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.key-service-item',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'power3.out', scrollTrigger: { trigger: '.key-service-grid', start: 'top 80%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="py-8 px-1 md:px-6 bg-slate-50 dark:bg-slate-900/50">
+    <section ref={sectionRef} className="py-8 px-1 md:px-6 bg-slate-50 dark:bg-slate-900/50">
       <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-7xl mx-auto">
-        <h2 className="text-3xl md:text-5xl font-bold leading-tight">
+        <h2 className="key-services-title text-3xl md:text-5xl font-bold leading-tight">
           {title}
         </h2>
-        <p className="text-muted-foreground text-base md:text-lg self-center">
+        <p className="key-services-subtitle text-muted-foreground text-base md:text-lg self-center">
           {subtitle}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-7xl mx-auto">
-        <div className="col-span-2 row-span-2 rounded-2xl overflow-hidden relative group">
+      <div className="key-service-grid grid grid-cols-2 md:grid-cols-4 gap-4 max-w-7xl mx-auto">
+        <div className="key-service-item col-span-2 row-span-2 rounded-2xl overflow-hidden relative group">
           <Image 
             src="/heart-3d.jpg" 
             alt="Heart health" 
@@ -76,14 +104,14 @@ const KeyServicesSection = (props: KeyServicesSectionProps) => {
           </div>
         </div>
 
-        <div className="bg-lavender rounded-2xl p-5 text-lavender-foreground flex flex-col justify-between">
+        <div className="key-service-item bg-lavender rounded-2xl p-5 text-lavender-foreground flex flex-col justify-between">
           <h4 className="font-display font-bold text-lg">{statistics}</h4>
           <p className="text-xs opacity-80 mt-2 leading-relaxed">
             {statisticsDesc}
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl border p-5">
+        <div className="key-service-item bg-card rounded-2xl border p-5">
           <p className="text-sm font-medium mb-2">{reportCases}</p>
           <div className="flex items-end gap-1 h-20">
             {[40, 60, 30, 80, 50, 70, 90].map((h, i) => (
@@ -92,13 +120,13 @@ const KeyServicesSection = (props: KeyServicesSectionProps) => {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border p-5 flex flex-col items-center justify-center text-center">
+        <div className="key-service-item bg-card rounded-2xl border p-5 flex flex-col items-center justify-center text-center">
           <p className="text-xs text-muted-foreground mb-1">{stayInformed}</p>
           <p className="text-3xl font-display font-bold text-lavender">90.5%</p>
           <p className="text-xs text-muted-foreground mt-1">{satisfaction}</p>
         </div>
 
-        <div className="col-span-2 bg-lavender rounded-2xl overflow-hidden flex">
+        <div className="key-service-item col-span-2 bg-lavender rounded-2xl overflow-hidden flex">
           <div className="p-5 flex-1 text-lavender-foreground">
             <h4 className="font-display font-bold text-lg mb-3">{drName}</h4>
             <div className="space-y-1 text-sm">
@@ -123,7 +151,7 @@ const KeyServicesSection = (props: KeyServicesSectionProps) => {
           </div>
         </div>
 
-        <div className="col-span-2 bg-card rounded-2xl border p-5">
+        <div className="key-service-item col-span-2 bg-card rounded-2xl border p-5">
           <p className="text-xs text-muted-foreground mb-1">{welcome}</p>
           <h4 className="font-display font-bold text-lg mb-2">{stayProactive}</h4>
           <a href="#" className="text-sm font-medium text-accent hover:underline">{bookLink}</a>

@@ -3,6 +3,9 @@
 import { useLocale } from '@/contexts/LocaleContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { useGSAP } from '@/lib/gsap-animations';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { 
   Video,
   FileText,
@@ -24,6 +27,41 @@ export default function ServicesPage() {
   const { t } = useLocale()
   const router = useRouter()
   const { user } = useAuth()
+
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.services-hero-title',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.services-hero-title', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.services-hero-subtitle',
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.services-hero-subtitle', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.service-card-item',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.services-grid', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.trust-item',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'power3.out', scrollTrigger: { trigger: '.trust-section', start: 'top 90%' } }
+      );
+
+      gsap.fromTo('.cta-section',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.cta-section', start: 'top 85%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const getBookingUrl = () => {
     if (!user) return '/login'
@@ -70,7 +108,7 @@ export default function ServicesPage() {
   ]
 
   return (
-    <main className="mx-auto px-6 lg:px-20 py-12 pt-24">
+    <main className="mx-auto px-6 lg:px-20 py-12 pt-24" ref={sectionRef}>
       <section className="relative rounded-xl overflow-hidden mb-16 h-[400px] flex items-center px-10">
         <div className="absolute inset-0 z-0">
           <img 
@@ -81,10 +119,10 @@ export default function ServicesPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#1b190d]/80 via-[#1b190d]/40 to-transparent"></div>
         </div>
         <div className="relative z-10 max-w-2xl text-white">
-          <h2 className="text-4xl lg:text-5xl font-extrabold mb-6 leading-tight">
+          <h2 className="services-hero-title text-4xl lg:text-5xl font-extrabold mb-6 leading-tight">
             {t('servicesPage.heroTitle')}
           </h2>
-          <p className="text-lg text-white/90 mb-8 font-medium">
+          <p className="services-hero-subtitle text-lg text-white/90 mb-8 font-medium">
             {t('servicesPage.heroSubtitle')}
           </p>
           <div className="relative max-w-md">
@@ -110,11 +148,11 @@ export default function ServicesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="services-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {services.map((service) => (
           <div 
             key={service.title}
-            className={`group bg-white p-6 rounded-xl border border-[#edca13]/10 hover:border-[#edca13] transition-all hover:shadow-2xl hover:shadow-[#edca13]/10 flex flex-col h-full ${service.isFeatured ? 'border-t-4 border-t-[#edca13]' : ''}`}
+            className={`service-card-item group bg-white p-6 rounded-xl border border-[#edca13]/10 hover:border-[#edca13] transition-all hover:shadow-2xl hover:shadow-[#edca13]/10 flex flex-col h-full ${service.isFeatured ? 'border-t-4 border-t-[#edca13]' : ''}`}
           >
             <div className={`size-14 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#edca13] transition-colors ${service.isFeatured ? 'bg-[#edca13]' : 'bg-[#edca13]/10'}`}>
               <service.icon className={`text-[#edca13] group-hover:text-white text-3xl transition-colors ${service.isFeatured ? 'text-white' : ''}`} size={28} />
@@ -135,7 +173,7 @@ export default function ServicesPage() {
         ))}
       </div>
 
-      <section className="mt-20 py-10 border-y border-[#edca13]/20 flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-60">
+      <section className="trust-section mt-20 py-10 border-y border-[#edca13]/20 flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-60">
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default">
             <item.icon className="text-3xl" size={28} />
@@ -144,7 +182,7 @@ export default function ServicesPage() {
         ))}
       </section>
 
-      <section className="mt-20 bg-[#1b190d] rounded-2xl p-10 lg:p-16 text-center text-white relative overflow-hidden">
+      <section className="cta-section mt-20 bg-[#1b190d] rounded-2xl p-10 lg:p-16 text-center text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#edca13]/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#edca13]/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
         <h3 className="text-3xl lg:text-4xl font-extrabold mb-6 relative z-10">{t('servicesPage.ctaTitle')}</h3>

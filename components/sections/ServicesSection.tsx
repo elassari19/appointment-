@@ -5,6 +5,9 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import {useLocale} from '@/contexts/LocaleContext';
 import Link from "next/link";
+import { useGSAP } from "@/lib/gsap-animations";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 interface IProps {
   role?: string | null;
@@ -23,19 +26,44 @@ const ServicesSection = ({ role}: IProps) => {
   const counselingTitle = t('services.counselingTitle');
   const counselingDesc = t('services.counselingDesc');
 
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.services-title',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.services-title', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.services-subtitle',
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.services-subtitle', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.service-card',
+        { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.service-card', start: 'top 80%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
+    <section ref={sectionRef} className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
       <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <h2 className="text-3xl md:text-5xl font-bold leading-tight">
+        <h2 className="services-title text-3xl md:text-5xl font-bold leading-tight">
           {title}
         </h2>
-        <p className="text-muted-foreground text-base md:text-lg self-center">
+        <p className="services-subtitle text-muted-foreground text-base md:text-lg self-center">
           {subtitle}
         </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-card rounded-xl border overflow-hidden group">
+        <div className="service-card bg-card rounded-xl border overflow-hidden group">
           <div className="h-48 overflow-hidden">
             <Image src="/mental-health.jpg" alt="Mental health" width={500} height={300} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>
@@ -51,7 +79,7 @@ const ServicesSection = ({ role}: IProps) => {
           </div>
         </div>
 
-        <div className="bg-purple-200 rounded-xl overflow-hidden text-lavender-foreground">
+        <div className="service-card bg-purple-200 rounded-xl overflow-hidden text-lavender-foreground">
           <div className="p-6 flex flex-col h-full">
             <div className="flex items-center gap-3 mb-auto">
               <div className="w-10 h-10 rounded-full bg-background/20 overflow-hidden">
@@ -76,7 +104,7 @@ const ServicesSection = ({ role}: IProps) => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border overflow-hidden group">
+        <div className="service-card bg-card rounded-xl border overflow-hidden group">
           <div className="h-48 overflow-hidden">
             <Image src="/counseling.jpg" alt="Counseling" width={500} height={300} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>

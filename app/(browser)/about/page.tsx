@@ -1,6 +1,9 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useGSAP } from '@/lib/gsap-animations';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { 
   CheckCircle,
   ArrowRight,
@@ -12,6 +15,56 @@ import {
 
 export default function AboutPage() {
   const { t } = useLocale()
+
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.about-hero-badge',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: '.about-hero-title', start: 'top 85%' } }
+      );
+
+      gsap.fromTo('.about-hero-title',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.about-hero-title', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.about-hero-subtitle',
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.about-hero-subtitle', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.about-mission',
+        { opacity: 0, x: -50 },
+        { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.about-mission', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.about-mission-image',
+        { opacity: 0, x: 50 },
+        { opacity: 1, x: 0, duration: 0.8, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.about-mission-image', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.timeline-item',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.timeline-grid', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.team-member',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'power3.out', scrollTrigger: { trigger: '.team-grid', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.feature-card',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.features-grid', start: 'top 80%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const timeline = [
     {
@@ -78,18 +131,18 @@ export default function AboutPage() {
   ]
 
   return (
-    <main className="w-full pt-24">
+    <main className="w-full pt-24" ref={sectionRef}>
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'linear-gradient(rgba(27, 25, 13, 0.7), rgba(27, 25, 13, 0.4)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCCyZD68qWy1VnQIErbcswxaSDmmiehvajt_1g2oUTSxgLFU74PL5cQaE_zqfJEvVLcICZ-SdwZ1476_CwTaN1Y9lqHoDGgamKi185tj-sG_Gy1MeRIV3Rff0RF5SxWZOh_iF_x6d8gGsCdSlGXHJ8ahrkC272FiN_9oyWeODvbEpCwc1SRMr2lTzCArjeiyNAUQ4nlAj1BwC308B175dk2heitJH1Xec1BL1x9yyeS8kOShDR75D6PgIGfrveKPpcpA-PUc8jpCmob")' }}
         />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <span className="text-[#edca13] font-bold tracking-widest uppercase text-xs mb-4 block">{t('about.established')}</span>
-          <h1 className="text-white text-4xl md:text-6xl font-black leading-tight mb-6">
+          <span className="about-hero-badge text-[#edca13] font-bold tracking-widest uppercase text-xs mb-4 block">{t('about.established')}</span>
+          <h1 className="about-hero-title text-white text-4xl md:text-6xl font-black leading-tight mb-6">
             {t('about.heroTitle')}
           </h1>
-          <p className="text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+          <p className="about-hero-subtitle text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto">
             {t('about.heroSubtitle')}
           </p>
         </div>
@@ -97,7 +150,7 @@ export default function AboutPage() {
 
       <section className="py-24 px-6 lg:px-40 bg-white">
         <div className="max-w-[1200px] mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
+          <div className="about-mission space-y-6">
             <div className="inline-flex items-center gap-2 bg-[#edca13]/10 px-3 py-1 rounded-full text-[#edca13] font-bold text-xs uppercase">
               <BadgeCheck className="text-sm" /> {t('about.ourMission')}
             </div>
@@ -120,7 +173,7 @@ export default function AboutPage() {
               </li>
             </ul>
           </div>
-          <div className="relative group">
+          <div className="about-mission-image relative group">
             <div className="absolute -inset-4 bg-[#edca13]/20 rounded-xl blur-xl group-hover:bg-[#edca13]/30 transition-all"></div>
             <img 
               alt="Doctor holding a patient's hand with care" 
@@ -137,9 +190,9 @@ export default function AboutPage() {
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">{t('about.timelineTitle')}</h2>
             <p className="text-[#1b190d]/60 max-w-xl mx-auto text-lg font-medium">{t('about.timelineSubtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="timeline-grid grid grid-cols-1 md:grid-cols-4 gap-8">
             {timeline.map((item) => (
-              <div key={item.year} className="p-8 bg-white rounded-xl shadow-sm border-t-4 border-[#edca13] hover:translate-y-[-5px] transition-transform">
+              <div key={item.year} className="timeline-item p-8 bg-white rounded-xl shadow-sm border-t-4 border-[#edca13] hover:translate-y-[-5px] transition-transform">
                 <span className="text-3xl font-black text-[#edca13]/30 mb-4 block">{item.year}</span>
                 <h3 className="text-lg font-bold mb-2">{item.title}</h3>
                 <p className="text-sm text-[#1b190d]/70">{item.description}</p>
@@ -161,9 +214,9 @@ export default function AboutPage() {
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="team-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member) => (
-              <div key={member.name} className="group">
+              <div key={member.name} className="team-member group">
                 <div className="relative overflow-hidden rounded-xl aspect-[4/5] mb-4">
                   <img 
                     alt={member.name} 
@@ -185,9 +238,9 @@ export default function AboutPage() {
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">{t('about.whyChooseTitle')}</h2>
             <p className="text-[#1b190d]/60 max-w-xl mx-auto text-lg font-medium">{t('about.whyChooseSubtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="features-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature) => (
-              <div key={feature.title} className="bg-white p-10 rounded-2xl shadow-sm border border-[#f3f1e7] flex flex-col items-center text-center">
+              <div key={feature.title} className="feature-card bg-white p-10 rounded-2xl shadow-sm border border-[#f3f1e7] flex flex-col items-center text-center">
                 <div className="size-16 rounded-2xl bg-[#edca13]/20 text-[#edca13] flex items-center justify-center mb-6">
                   <feature.icon className="text-4xl" />
                 </div>

@@ -1,6 +1,9 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext'
+import { useGSAP } from '@/lib/gsap-animations';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { 
   Search,
   ArrowRight,
@@ -15,6 +18,41 @@ import {
 
 export default function BlogPage() {
   const { t } = useLocale()
+
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.featured-article-header',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: '.featured-article', start: 'top 85%' } }
+      );
+
+      gsap.fromTo('.featured-article',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.featured-article', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.category-tab',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'power3.out', scrollTrigger: { trigger: '.category-tabs', start: 'top 90%' } }
+      );
+
+      gsap.fromTo('.article-card',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'power3.out', scrollTrigger: { trigger: '.articles-grid', start: 'top 85%' } }
+      );
+
+      gsap.fromTo('.newsletter-section',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.newsletter-section', start: 'top 90%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const featuredArticle = {
     category: t('blogPage.medicalAdvancements'),
@@ -91,15 +129,15 @@ export default function BlogPage() {
   ]
 
   return (
-    <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 py-8 pt-24">
+    <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 py-8 pt-24" ref={sectionRef}>
       <section className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
+        <div className="featured-article-header flex items-center gap-2 mb-6">
           <span className="bg-[#edca13]/20 text-[#edca13] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
             {t('blogPage.editorsChoice')}
           </span>
           <div className="h-px flex-1 bg-[#e7e3cf]"></div>
         </div>
-        <div className="grid lg:grid-cols-12 gap-8 items-center bg-white rounded-xl overflow-hidden shadow-sm border border-[#e7e3cf]">
+        <div className="featured-article grid lg:grid-cols-12 gap-8 items-center bg-white rounded-xl overflow-hidden shadow-sm border border-[#e7e3cf]">
           <div className="lg:col-span-7 h-[300px] lg:h-[500px]">
             <img 
               className="w-full h-full object-cover"
@@ -130,7 +168,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <div className="mb-8 overflow-x-auto">
+      <div className="category-tabs mb-8 overflow-x-auto">
         <div className="flex border-b border-[#e7e3cf] gap-8 min-w-max">
           {categories.map((cat, idx) => (
             <button 
@@ -160,9 +198,9 @@ export default function BlogPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="articles-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article) => (
-            <article key={article.title} className="group cursor-pointer">
+            <article key={article.title} className="article-card group cursor-pointer">
               <div className="relative aspect-video rounded-xl overflow-hidden mb-4 shadow-sm">
                 <img 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -195,7 +233,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <section className="mt-16 bg-[#edca13]/10 rounded-2xl p-8 lg:p-12 text-center relative overflow-hidden">
+      <section className="newsletter-section mt-16 bg-[#edca13]/10 rounded-2xl p-8 lg:p-12 text-center relative overflow-hidden">
         <div className="absolute -top-10 -right-10 size-40 bg-[#edca13]/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-10 -left-10 size-40 bg-[#edca13]/20 rounded-full blur-3xl"></div>
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-6">

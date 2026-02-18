@@ -2,8 +2,10 @@
 
 import { useLocale } from '@/contexts/LocaleContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useGSAP } from '@/lib/gsap-animations';
+import gsap from 'gsap';
 import { 
   Search,
   Star,
@@ -42,6 +44,31 @@ export default function DoctorsPage() {
   const { t } = useLocale()
   const router = useRouter()
   const { user } = useAuth()
+
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.doctors-title',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.doctors-title', start: 'top 80%' } }
+      );
+
+      gsap.fromTo('.filter-sidebar',
+        { opacity: 0, x: -50 },
+        { opacity: 1, x: 0, duration: 0.6, delay: 0.2, ease: 'power3.out', scrollTrigger: { trigger: '.filter-sidebar', start: 'top 85%' } }
+      );
+
+      gsap.fromTo('.doctor-card',
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power3.out', scrollTrigger: { trigger: '.doctors-grid', start: 'top 85%' } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const getBookingUrl = () => {
     if (!user) return '/login'
@@ -189,10 +216,10 @@ export default function DoctorsPage() {
   }
 
   return (
-    <main className="mx-auto p-4 lg:pt-24 min-h-screen pt-24 px-2 lg:px-20">
+    <main className="mx-auto p-4 lg:pt-24 min-h-screen pt-24 px-2 lg:px-20" ref={sectionRef}>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="doctors-title text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             {t('doctorsPage.title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
@@ -218,7 +245,7 @@ export default function DoctorsPage() {
       </form>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="w-full lg:w-72 shrink-0 space-y-6">
+        <aside className="filter-sidebar w-full lg:w-72 shrink-0 space-y-6">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-[24px] shadow-sm border border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-bold text-lg">{t('doctorsPage.filters')}</h2>
@@ -326,7 +353,7 @@ export default function DoctorsPage() {
               <p className="text-slate-500 text-lg">{t('doctorsPage.noResults') || 'No doctors found'}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="doctors-grid grid grid-cols-1 xl:grid-cols-2 gap-6">
               {doctors.map((doctor) => (
                 <div 
                   key={doctor.id}
