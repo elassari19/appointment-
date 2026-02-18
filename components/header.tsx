@@ -48,8 +48,8 @@ const Header = () => {
     <nav className="fixed top-0 w-full z-50 px-8 py-2">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-10 py-2 glass-card  backdrop-blur rounded-2xl shadow-lg">
         <div className="flex items-center gap-3">
-          <Link href={`/`} className="text-3xl font-extrabold tracking-tighter text-slate-900 dark:text-white uppercase">
-            Nutrison
+          <Link href={`/`} className="flex items-center">
+            <img src="/logo.png" alt="Nutrison" className="h-16 w-auto" />
           </Link>
         </div>
 

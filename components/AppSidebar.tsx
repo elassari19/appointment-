@@ -89,9 +89,7 @@ export function AppSidebar({ role = "admin" }: AppSidebarProps) {
     <aside className="w-64 bg-sidebar dark:bg-[#1a1d21] border-r border-sidebar-border dark:border-[#374151] flex-shrink-0 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-          <span className="material-icons-round text-primary-foreground text-xl">medical_services</span>
-        </div>
+        <Image width={46} height={46} src={'/logo.png'} alt='logo' />
         <span className="text-xl font-extrabold tracking-tight text-foreground dark:text-white">MediCare</span>
       </div>
 
