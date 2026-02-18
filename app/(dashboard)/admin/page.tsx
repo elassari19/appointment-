@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import MonitoringDashboard from '@/components/admin/MonitoringDashboard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 interface AnalyticsData {
   totalUsers: { patients: number; doctors: number; admins: number; total: number };
@@ -109,7 +110,6 @@ const getIconBgColor = (color: string) => {
 };
 
 export default function AdminDashboardPage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Confirmed');
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,25 +210,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, Admin</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Here&apos;s a snapshot of the platform&apos;s performance today.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input type="text" placeholder="Search data..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl w-64 outline-none focus:ring-2 focus:ring-primary transition-all" />
-          </div>
-          <button className="w-11 h-11 flex items-center justify-center bg-card border border-border rounded-xl hover:bg-muted transition-all relative">
-            <span className="material-icons-round text-muted-foreground">notifications</span>
-            {notificationCount > 0 && (
-              <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-card"></span>
-            )}
-          </button>
-          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center font-bold text-primary-foreground">A</div>
-        </div>
-      </header>
+      <DashboardHeader
+        title="Welcome back, Admin"
+        subtitle="Here's a snapshot of the platform's performance today."
+        searchPlaceholder="Search data..."
+        notificationCount={notificationCount}
+      />
 
       <div className="flex gap-4 mb-8 border-b border-border">
         <button onClick={() => setActiveTab('overview')} className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>

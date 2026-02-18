@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Bell, Search, Globe, User, LogOut, Settings, ChevronDown, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, Search, Globe, User, LogOut, Settings, ChevronDown, Calendar, Clock, CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 
@@ -16,6 +16,17 @@ interface Notification {
   read: boolean;
   createdAt: string;
   type: string;
+}
+
+interface SearchResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  avatar?: string;
 }
 
 interface DashboardHeaderProps {
@@ -42,8 +53,13 @@ export function DashboardHeader({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { user, logout, isAuthenticated } = useAuth();
   const { locale, setLocale, t } = useLocale();
@@ -57,10 +73,71 @@ export function DashboardHeader({
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setIsProfileOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearchResults(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const searchUsers = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}&limit=10`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.users || []);
+      }
+    } catch (err) {
+      console.error('Failed to search users:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    onSearch?.(value);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.length >= 2) {
+      setShowSearchResults(true);
+      searchTimeoutRef.current = setTimeout(() => {
+        searchUsers(value);
+      }, 300);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    setShowSearchResults(false);
+    setSearchValue('');
+    if (result.role === 'doctor') {
+      router.push(`/doctors/${result.id}`);
+    } else if (result.role === 'patient') {
+      router.push(`/patient/${result.id}`);
+    } else if (result.role === 'admin') {
+      router.push(`/admin/staff`);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchValue('');
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
 
   const fetchNotifications = async () => {
     setIsLoadingNotifications(true);
@@ -132,11 +209,6 @@ export function DashboardHeader({
     return date.toLocaleDateString();
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-    onSearch?.(e.target.value);
-  };
-
   const switchLocale = (newLocale: 'en' | 'ar') => {
     setLocale(newLocale);
     setIsLangOpen(false);
@@ -160,15 +232,54 @@ export function DashboardHeader({
       </div>
       <div className="flex items-center gap-3">
         {showSearch && (
-          <div className="relative hidden sm:block">
+          <div className="relative hidden sm:block" ref={searchRef}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={handleSearchChange}
-              className="pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
+              onFocus={() => searchValue.length >= 2 && setShowSearchResults(true)}
+              className="pl-10 pr-10 py-2.5 bg-card border border-border rounded-xl w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
+            {searchValue && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            {showSearchResults && (
+              <div className="absolute top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-lg z-50 max-h-80 overflow-y-auto">
+                {isSearching ? (
+                  <div className="p-4 text-center text-muted-foreground">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.id}
+                        onClick={() => handleSearchResultClick(result)}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors text-left"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                          {result.firstName.charAt(0)}{result.lastName.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{result.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{result.email}</p>
+                        </div>
+                        <span className="text-xs px-2 py-1 bg-muted rounded-full capitalize">
+                          {result.role}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground">No users found</div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
