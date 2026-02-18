@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar, Clock, User, Star, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Loader2, Repeat } from 'lucide-react';
+import { Search, Calendar, Clock, User, Star, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Loader2, Repeat, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale } from '@/contexts/LocaleContext';
 import { RecurrenceFrequency } from '@/lib/entities/Appointment';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 interface Doctor {
   id: string;
@@ -30,6 +32,74 @@ interface DayAvailability {
   slots: TimeSlot[];
 }
 
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+
+function PaymentForm({ 
+  amount, 
+  onSuccess, 
+  onError,
+  clientSecret,
+  isProcessing,
+  setIsProcessing 
+}: { 
+  amount: number; 
+  onSuccess: () => void;
+  onError: (error: string) => void;
+  clientSecret: string | null;
+  isProcessing: boolean;
+  setIsProcessing: (v: boolean) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsProcessing(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href,
+      },
+      redirect: 'if_required',
+    });
+
+    if (error) {
+      onError(error.message || 'Payment failed');
+      setIsProcessing(false);
+    } else {
+      onSuccess();
+    }
+  };
+
+  if (!clientSecret) return null;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+      <button
+        type="submit"
+        disabled={!stripe || isProcessing}
+        className="w-full py-3 bg-[#facc15] text-slate-900 font-medium rounded-xl hover:bg-[#eab308] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <CreditCard className="w-5 h-5" />
+            Pay {amount} SAR
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
 export default function BookAppointmentPage() {
   const { t } = useLocale();
   const router = useRouter();
@@ -48,6 +118,11 @@ export default function BookAppointmentPage() {
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>(RecurrenceFrequency.WEEKLY);
   const [recurrenceCount, setRecurrenceCount] = useState(4);
   const [bookedMeetingLink, setBookedMeetingLink] = useState<string | null>(null);
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
 
   useEffect(() => {
     fetchDoctors();
@@ -104,7 +179,7 @@ export default function BookAppointmentPage() {
     }
   };
 
-  const handleBookAppointment = async () => {
+  const handleProceedToPayment = async () => {
     if (!selectedDoctor || !selectedSlot) return;
 
     setIsLoading(true);
@@ -112,48 +187,101 @@ export default function BookAppointmentPage() {
 
     try {
       const startTime = new Date(selectedSlot.start);
-      
-      if (isRecurring) {
-        const response = await fetch('/api/appointments/recurring', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            doctorId: selectedDoctor.id,
-            startTime: startTime.toISOString(),
-            duration: 60,
-            notes,
-            recurrenceFrequency,
-            recurrenceCount,
-          }),
-        });
+      const response = await fetch('/api/payments/create-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorId: selectedDoctor.id,
+          startTime: startTime.toISOString(),
+          duration: 60,
+          notes,
+          createMeetLink: true,
+        }),
+      });
 
-        if (response.ok) {
-          setStep(4);
-        } else {
-          const data = await response.json();
-          setError(data.error || 'Failed to book recurring appointments');
-        }
+      const data = await response.json();
+
+      if (response.ok) {
+        setClientSecret(data.clientSecret);
+        setAppointmentId(data.appointmentId);
+        setPaymentAmount(data.amount);
+        setStep(3);
       } else {
-        const response = await fetch('/api/appointments/book-visit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            doctorId: selectedDoctor.id,
-            startTime: startTime.toISOString(),
-            duration: 60,
-            notes,
-            createMeetLink: true,
-          }),
-        });
+        setError(data.error || 'Failed to initialize payment');
+      }
+    } catch (err) {
+      setError('An error occurred while initializing payment');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (response.ok) {
-          const data = await response.json();
-          setBookedMeetingLink(data.appointment.meetingLink || null);
-          setStep(4);
-        } else {
-          const data = await response.json();
-          setError(data.error || 'Failed to book appointment');
-        }
+  const handlePaymentSuccess = async () => {
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      const startTime = new Date(selectedSlot!.start);
+      const response = await fetch('/api/appointments/book-visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorId: selectedDoctor!.id,
+          startTime: startTime.toISOString(),
+          duration: 60,
+          notes,
+          createMeetLink: true,
+          appointmentId: appointmentId,
+          paymentCompleted: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBookedMeetingLink(data.appointment.meetingLink || null);
+        setStep(5);
+      } else {
+        setError(data.error || 'Failed to confirm appointment');
+      }
+    } catch (err) {
+      setError('An error occurred while confirming appointment');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePaymentError = (errorMessage: string) => {
+    setError(errorMessage);
+    setIsProcessing(false);
+  };
+
+  const handleBookRecurringAppointment = async () => {
+    if (!selectedDoctor || !selectedSlot) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const startTime = new Date(selectedSlot.start);
+      const response = await fetch('/api/appointments/recurring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorId: selectedDoctor.id,
+          startTime: startTime.toISOString(),
+          duration: 60,
+          notes,
+          recurrenceFrequency,
+          recurrenceCount,
+        }),
+      });
+
+      if (response.ok) {
+        setStep(5);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to book recurring appointments');
       }
     } catch (err) {
       setError('An error occurred while booking');
@@ -201,26 +329,40 @@ export default function BookAppointmentPage() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
         <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#facc15]' : 'text-slate-400'}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-[#facc15] text-slate-900' : 'bg-slate-200'}`}>
             {step > 1 ? <CheckCircle2 className="w-5 h-5" /> : '1'}
           </div>
-          <span className="font-medium">Select Doctor</span>
+          <span className="font-medium whitespace-nowrap">Select Doctor</span>
         </div>
-        <div className="flex-1 h-px bg-slate-200" />
+        <div className="flex-1 h-px bg-slate-200 min-w-[20px]" />
         <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#facc15]' : 'text-slate-400'}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-[#facc15] text-slate-900' : 'bg-slate-200'}`}>
             {step > 2 ? <CheckCircle2 className="w-5 h-5" /> : '2'}
           </div>
-          <span className="font-medium">Choose Time</span>
+          <span className="font-medium whitespace-nowrap">Choose Time</span>
         </div>
-        <div className="flex-1 h-px bg-slate-200" />
+        <div className="flex-1 h-px bg-slate-200 min-w-[20px]" />
         <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#facc15]' : 'text-slate-400'}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-[#facc15] text-slate-900' : 'bg-slate-200'}`}>
             {step > 3 ? <CheckCircle2 className="w-5 h-5" /> : '3'}
           </div>
-          <span className="font-medium">Confirm</span>
+          <span className="font-medium whitespace-nowrap">Payment</span>
+        </div>
+        <div className="flex-1 h-px bg-slate-200 min-w-[20px]" />
+        <div className={`flex items-center gap-2 ${step >= 4 ? 'text-[#facc15]' : 'text-slate-400'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 4 ? 'bg-[#facc15] text-slate-900' : 'bg-slate-200'}`}>
+            {step > 4 ? <CheckCircle2 className="w-5 h-5" /> : '4'}
+          </div>
+          <span className="font-medium whitespace-nowrap">Confirm</span>
+        </div>
+        <div className="flex-1 h-px bg-slate-200 min-w-[20px]" />
+        <div className={`flex items-center gap-2 ${step >= 5 ? 'text-[#facc15]' : 'text-slate-400'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 5 ? 'bg-[#facc15] text-slate-900' : 'bg-slate-200'}`}>
+            {step > 5 ? <CheckCircle2 className="w-5 h-5" /> : '5'}
+          </div>
+          <span className="font-medium whitespace-nowrap">Done</span>
         </div>
       </div>
 
@@ -264,6 +406,11 @@ export default function BookAppointmentPage() {
                           <span className="text-sm font-medium">{doctor.rating.toFixed(1)}</span>
                         </div>
                       )}
+                      {doctor.consultationFee && doctor.consultationFee > 0 && (
+                        <div className="mt-2 text-sm font-medium text-[#facc15]">
+                          {doctor.consultationFee} SAR / session
+                        </div>
+                      )}
                     </div>
                   </div>
                   {doctor.bio && (
@@ -299,6 +446,11 @@ export default function BookAppointmentPage() {
                   {selectedDoctor.firstName} {selectedDoctor.lastName}
                 </h3>
                 <p className="text-slate-500">{selectedDoctor.specialty || 'Doctor'}</p>
+                {selectedDoctor.consultationFee && selectedDoctor.consultationFee > 0 && (
+                  <p className="text-sm font-medium text-[#facc15] mt-1">
+                    {selectedDoctor.consultationFee} SAR / session
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -393,7 +545,7 @@ export default function BookAppointmentPage() {
         </div>
       )}
 
-      {step === 3 && selectedDoctor && selectedSlot && (
+      {step === 3 && selectedDoctor && selectedSlot && !clientSecret && (
         <div className="space-y-6">
           <button
             onClick={() => setStep(2)}
@@ -432,6 +584,15 @@ export default function BookAppointmentPage() {
                 </div>
               </div>
 
+              <div className="p-4 bg-[#facc15]/10 border border-[#facc15]/30 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-[#1e293b]">Consultation Fee</span>
+                  <span className="text-xl font-bold text-[#facc15]">
+                    {selectedDoctor.consultationFee || 0} SAR
+                  </span>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Notes (optional)
@@ -444,63 +605,136 @@ export default function BookAppointmentPage() {
                   rows={4}
                 />
               </div>
+            </div>
 
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isRecurring}
-                    onChange={(e) => setIsRecurring(e.target.checked)}
-                    className="w-5 h-5 rounded border-slate-300 text-[#facc15] focus:ring-[#facc15]"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Repeat className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium text-blue-700">Make this a recurring appointment</span>
-                  </div>
-                </label>
+            <button
+              onClick={handleProceedToPayment}
+              disabled={isLoading || !selectedDoctor.consultationFee}
+              className="mt-6 w-full py-3 bg-[#facc15] text-slate-900 font-medium rounded-xl hover:bg-[#eab308] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : !selectedDoctor.consultationFee ? (
+                'Consultation fee not available'
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5" />
+                  Proceed to Payment
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
-                {isRecurring && (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Repeat every
-                      </label>
-                      <select
-                        value={recurrenceFrequency}
-                        onChange={(e) => setRecurrenceFrequency(e.target.value as RecurrenceFrequency)}
-                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
-                      >
-                        <option value={RecurrenceFrequency.DAILY}>Day</option>
-                        <option value={RecurrenceFrequency.WEEKLY}>Week</option>
-                        <option value={RecurrenceFrequency.BIWEEKLY}>2 Weeks</option>
-                        <option value={RecurrenceFrequency.MONTHLY}>Month</option>
-                      </select>
-                    </div>
+      {step === 3 && clientSecret && (
+        <div className="space-y-6">
+          <button
+            onClick={() => {
+              setClientSecret(null);
+              setStep(3);
+            }}
+            className="flex items-center gap-2 text-slate-500 hover:text-[#facc15] transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to details
+          </button>
 
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Number of appointments
-                      </label>
-                      <select
-                        value={recurrenceCount}
-                        onChange={(e) => setRecurrenceCount(parseInt(e.target.value))}
-                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#facc15]/50"
-                      >
-                        <option value={2}>2 appointments</option>
-                        <option value={4}>4 appointments</option>
-                        <option value={8}>8 appointments</option>
-                        <option value={12}>12 appointments</option>
-                        <option value={26}>26 appointments (6 months)</option>
-                        <option value={52}>52 appointments (1 year)</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-[#1e293b] mb-4">Payment</h3>
+            
+            <div className="p-4 bg-[#facc15]/10 border border-[#facc15]/30 rounded-lg mb-6">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-[#1e293b]">Total Amount</span>
+                <span className="text-2xl font-bold text-[#facc15]">
+                  {paymentAmount} SAR
+                </span>
+              </div>
+              <p className="text-sm text-slate-500 mt-2">
+                Consultation with Dr. {selectedDoctor?.firstName} {selectedDoctor?.lastName}
+              </p>
+            </div>
+
+            <Elements 
+              stripe={stripePromise} 
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'stripe',
+                  variables: {
+                    colorPrimary: '#facc15',
+                    colorBackground: '#f8fafc',
+                    colorText: '#1e293b',
+                  },
+                },
+              }}
+            >
+              <PaymentForm 
+                amount={paymentAmount}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                clientSecret={clientSecret}
+                isProcessing={isProcessing}
+                setIsProcessing={setIsProcessing}
+              />
+            </Elements>
+
+            <p className="text-xs text-slate-500 mt-4 text-center">
+              Your payment is secured by Stripe
+            </p>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && selectedDoctor && selectedSlot && (
+        <div className="space-y-6">
+          <button
+            onClick={() => setStep(3)}
+            className="flex items-center gap-2 text-slate-500 hover:text-[#facc15] transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to payment
+          </button>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-[#1e293b] mb-4">Confirm Appointment</h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                <div className="w-12 h-12 bg-[#facc15]/20 rounded-full flex items-center justify-center text-[#facc15] font-bold">
+                  {selectedDoctor.firstName[0]}{selectedDoctor.lastName[0]}
+                </div>
+                <div>
+                  <p className="font-medium text-[#1e293b]">
+                    {selectedDoctor.firstName} {selectedDoctor.lastName}
+                  </p>
+                  <p className="text-sm text-slate-500">Doctor</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500 mb-1">Date</p>
+                  <p className="font-medium">{formatDate(selectedDate)}</p>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500 mb-1">Time</p>
+                  <p className="font-medium">
+                    {new Date(selectedSlot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-medium">Payment Successful</span>
+                </div>
               </div>
             </div>
 
             <button
-              onClick={handleBookAppointment}
+              onClick={handleBookRecurringAppointment}
               disabled={isLoading}
               className="mt-6 w-full py-3 bg-[#facc15] text-slate-900 font-medium rounded-xl hover:bg-[#eab308] transition-colors flex items-center justify-center gap-2"
             >
@@ -514,7 +748,7 @@ export default function BookAppointmentPage() {
         </div>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-500" />

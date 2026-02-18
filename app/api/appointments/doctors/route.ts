@@ -36,7 +36,18 @@ export async function GET(request: NextRequest) {
 
     const doctors = await appointmentService.getDoctors({ search });
 
-    return Response.json({ doctors });
+    const formattedDoctors = doctors.map((doctor: any) => ({
+      id: doctor.id,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      email: doctor.email,
+      bio: doctor.bio,
+      profilePicture: doctor.profilePicture,
+      specialty: doctor.doctorProfile?.specialty,
+      consultationFee: doctor.doctorProfile?.consultationFee || 0,
+    }));
+
+    return Response.json({ doctors: formattedDoctors });
   } catch (error) {
     console.error('Get doctors error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

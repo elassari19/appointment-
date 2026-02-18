@@ -507,7 +507,7 @@ export class AppointmentService {
   async getDoctors(filters?: { specialty?: string; search?: string }): Promise<User[]> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
-      .leftJoin('user.doctorProfile', 'doctorProfile')
+      .leftJoinAndSelect('user.doctorProfile', 'doctorProfile')
       .where('user.role = :role', { role: UserRole.DOCTOR })
       .andWhere('user.isActive = :isActive', { isActive: true });
 
@@ -522,7 +522,18 @@ export class AppointmentService {
       queryBuilder.andWhere('doctorProfile.specialty ILIKE :specialty', { specialty: `%${filters.specialty}%` });
     }
 
-    return await queryBuilder.getMany();
+    const doctors = await queryBuilder.getMany();
+    
+    return doctors.map(doctor => {
+      const doctorObj = doctor as any;
+      return {
+        ...doctorObj,
+        doctorProfile: doctorObj.doctorProfile ? {
+          consultationFee: doctorObj.doctorProfile.consultationFee,
+          specialty: doctorObj.doctorProfile.specialty,
+        } : null,
+      };
+    });
   }
 
   async getAppointmentsByDoctorNameOrSpecialty(

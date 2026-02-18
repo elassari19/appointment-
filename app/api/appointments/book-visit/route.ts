@@ -17,6 +17,8 @@ const bookVisitSchema = z.object({
   duration: z.number().min(15, 'Duration must be at least 15 minutes'),
   notes: z.string().optional(),
   createMeetLink: z.boolean().default(true),
+  appointmentId: z.string().uuid().optional(),
+  paymentCompleted: z.boolean().default(false),
 });
 
 async function getUserFromRequest(request: NextRequest): Promise<{ userId: string; email: string; googleTokens?: { accessToken: string; refreshToken?: string } } | null> {
@@ -63,7 +65,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { doctorId, startTime, duration, notes, createMeetLink } = validationResult.data;
+    const { doctorId, startTime, duration, notes, createMeetLink, appointmentId, paymentCompleted } = validationResult.data;
+
+    if (appointmentId && paymentCompleted) {
+      const appointmentRepo = AppDataSource.getRepository(Appointment);
+      const existingAppointment = await appointmentRepo.findOne({
+        where: { id: appointmentId },
+        relations: ['doctor', 'patient']
+      });
+
+      if (!existingAppointment) {
+        return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+      }
+
+      if (existingAppointment.patient.id !== userResult.userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      existingAppointment.status = 'confirmed' as any;
+      existingAppointment.confirmedAt = new Date();
+      await appointmentRepo.save(existingAppointment);
+
+      try {
+        await notificationService.sendAppointmentConfirmation(existingAppointment);
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+      }
+
+      return NextResponse.json({
+        appointment: {
+          id: existingAppointment.id,
+          startTime: existingAppointment.startTime,
+          duration: existingAppointment.duration,
+          status: existingAppointment.status,
+          meetingLink: existingAppointment.meetingLink,
+          notes: existingAppointment.notes,
+        },
+        message: 'Appointment confirmed successfully',
+      }, { status: 200 });
+    }
 
     let result;
 
